@@ -1,7 +1,7 @@
 'use client';
 
 import { Group, Rect, Line, Arc } from 'react-konva';
-import { WallOpening, CustomWallSegment, WINDOW_WIDTH, BALCONY_DOOR_WIDTH, DOOR_WIDTH } from '@/types';
+import { WallOpening, CustomWallSegment, WINDOW_WIDTH, WINDOW_TALL_WIDTH, BALCONY_DOOR_WIDTH, DOOR_WIDTH } from '@/types';
 import { useRoomStore } from '@/store/useRoomStore';
 import { useEffect } from 'react';
 
@@ -17,6 +17,7 @@ interface WallOpening2DProps {
 function getOpeningWidth(type: WallOpening['type']): number {
   switch (type) {
     case 'window': return WINDOW_WIDTH;
+    case 'window-tall': return WINDOW_TALL_WIDTH;
     case 'balcony-door': return BALCONY_DOOR_WIDTH;
     case 'door': return DOOR_WIDTH;
   }
@@ -119,7 +120,7 @@ export default function WallOpening2D({ opening, roomWidth, roomHeight, isSelect
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       onDragEnd={handleDragEnd as any}
     >
-      {opening.type === 'window' ? (
+      {(opening.type === 'window' || opening.type === 'window-tall') ? (
         <Group>
           <Rect x={-halfW} y={-wallThickness / 2} width={openingWidth} height={wallThickness} fill="white" />
           <Line points={[-halfW, -wallThickness / 2, halfW, -wallThickness / 2]} stroke={isSelected ? '#2563eb' : '#1e40af'} strokeWidth={isSelected ? 2 : 1.5} />

@@ -32,7 +32,7 @@ export interface PlacedFurniture {
 }
 
 export type WallSide = 'top' | 'right' | 'bottom' | 'left';
-export type WallOpeningType = 'window' | 'balcony-door' | 'door';
+export type WallOpeningType = 'window' | 'window-tall' | 'balcony-door' | 'door';
 
 export interface WallOpening {
   id: string;
@@ -47,6 +47,11 @@ export interface WallOpening {
 export const WINDOW_WIDTH = 120;
 export const WINDOW_HEIGHT = 120;
 export const WINDOW_SILL_HEIGHT = 80;
+
+// Tall window: 110x200cm, low sill
+export const WINDOW_TALL_WIDTH = 110;
+export const WINDOW_TALL_HEIGHT = 200;
+export const WINDOW_TALL_SILL_HEIGHT = 30;
 
 // Balcony door: 100x250cm, floor to ceiling
 export const BALCONY_DOOR_WIDTH = 100;

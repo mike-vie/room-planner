@@ -5,12 +5,11 @@ import { Stage, Layer, Rect, Line, Circle, Group, Text } from 'react-konva';
 import Konva from 'konva';
 import Grid from './Grid';
 import Ruler from './Ruler';
-import Wall from './Wall';
 import FurnitureItem2D from './FurnitureItem2D';
 import WallOpening2D from './WallOpening2D';
 import { useRoomStore } from '@/store/useRoomStore';
 import { furnitureCatalog } from '@/data/furniture-catalog';
-import { WallPoint, CustomWallSegment, WINDOW_WIDTH, BALCONY_DOOR_WIDTH, DOOR_WIDTH } from '@/types';
+import { WallPoint, CustomWallSegment, WallOpening, InteriorWall, WallSide, WINDOW_WIDTH, WINDOW_TALL_WIDTH, BALCONY_DOOR_WIDTH, DOOR_WIDTH } from '@/types';
 
 function snapToGrid(x: number, y: number, grid = 10): WallPoint {
   return { x: Math.round(x / grid) * grid, y: Math.round(y / grid) * grid };
@@ -26,16 +25,39 @@ function ptToSeg(px: number, py: number, x1: number, y1: number, x2: number, y2:
   return { dist, pos: t * Math.sqrt(lenSq) };
 }
 
+// Center of a wall opening in room coordinates
+function getOpeningCenter(
+  opening: WallOpening, rW: number, rH: number, iWalls: InteriorWall[]
+): { x: number; y: number } | null {
+  if (opening.wallSegmentId) {
+    const seg = iWalls.find(w => w.id === opening.wallSegmentId);
+    if (!seg) return null;
+    const dx = seg.x2 - seg.x1, dy = seg.y2 - seg.y1;
+    const len = Math.hypot(dx, dy);
+    if (len < 0.01) return null;
+    return { x: seg.x1 + (dx / len) * opening.position, y: seg.y1 + (dy / len) * opening.position };
+  }
+  switch (opening.wall) {
+    case 'top':    return { x: opening.position, y: 0 };
+    case 'bottom': return { x: opening.position, y: rH };
+    case 'left':   return { x: 0,  y: opening.position };
+    case 'right':  return { x: rW, y: opening.position };
+    default:       return null;
+  }
+}
+
 export default function Canvas2D() {
   const {
     roomWidth, roomHeight, furniture, selectedFurnitureId, selectFurniture,
     wallOpenings, placementMode, addWallOpening, setPlacementMode,
-    hiddenWalls,
+    hiddenWalls, toggleWall,
     interiorWalls, drawingInteriorWall, selectedInteriorWallId,
     addInteriorWall, removeInteriorWall, setDrawingInteriorWall, selectInteriorWall,
+    removeWallOpening,
   } = useRoomStore();
 
   const [selectedOpeningId, setSelectedOpeningId] = useState<string | null>(null);
+  const [selectedWallSide, setSelectedWallSide] = useState<WallSide | null>(null);
   const stageRef = useRef<Konva.Stage>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [stageSize, setStageSize] = useState({ width: 600, height: 500 });
@@ -67,10 +89,10 @@ export default function Canvas2D() {
 
   // Default 4-wall rectangle
   const rectWalls = [
-    { id: 'w-top',    x1: 0,         y1: 0,          x2: roomWidth, y2: 0 },
-    { id: 'w-right',  x1: roomWidth, y1: 0,          x2: roomWidth, y2: roomHeight },
-    { id: 'w-bottom', x1: roomWidth, y1: roomHeight, x2: 0,         y2: roomHeight },
-    { id: 'w-left',   x1: 0,         y1: roomHeight, x2: 0,         y2: 0 },
+    { id: 'w-top',    side: 'top'    as WallSide, x1: 0,         y1: 0,          x2: roomWidth, y2: 0 },
+    { id: 'w-right',  side: 'right'  as WallSide, x1: roomWidth, y1: 0,          x2: roomWidth, y2: roomHeight },
+    { id: 'w-bottom', side: 'bottom' as WallSide, x1: roomWidth, y1: roomHeight, x2: 0,         y2: roomHeight },
+    { id: 'w-left',   side: 'left'   as WallSide, x1: 0,         y1: roomHeight, x2: 0,         y2: 0 },
   ];
 
   // Pointer-to-room coords
@@ -139,7 +161,10 @@ export default function Canvas2D() {
     // --- Placement mode ---
     if (placementMode !== 'none') {
       const { x: roomX, y: roomY } = raw;
-      const openingWidth = placementMode === 'window' ? WINDOW_WIDTH : placementMode === 'door' ? DOOR_WIDTH : BALCONY_DOOR_WIDTH;
+      const openingWidth = placementMode === 'window' ? WINDOW_WIDTH
+        : placementMode === 'window-tall' ? WINDOW_TALL_WIDTH
+        : placementMode === 'door' ? DOOR_WIDTH
+        : BALCONY_DOOR_WIDTH;
       const halfW = openingWidth / 2;
 
       // Find nearest interior wall
@@ -175,6 +200,7 @@ export default function Canvas2D() {
       selectFurniture(null);
       selectInteriorWall(null);
       setSelectedOpeningId(null);
+      setSelectedWallSide(null);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
@@ -182,6 +208,12 @@ export default function Canvas2D() {
     offsetX, offsetY, scale, roomWidth, roomHeight,
     drawingInteriorWall, drawStartPt, interiorWalls, addInteriorWall,
   ]);
+
+  // Center of selected opening (for × button)
+  const selectedOpening = selectedOpeningId ? wallOpenings.find(o => o.id === selectedOpeningId) : null;
+  const selectedOpeningCenter = selectedOpening
+    ? getOpeningCenter(selectedOpening, roomWidth, roomHeight, interiorWalls)
+    : null;
 
   return (
     <div ref={containerRef} className={`w-full h-full bg-gray-50 ${drawingInteriorWall ? 'cursor-crosshair' : ''}`}>
@@ -204,15 +236,77 @@ export default function Canvas2D() {
             fill="#fafafa" stroke="#d1d5db" strokeWidth={1}
           />
 
-          {/* Outer walls */}
-          {rectWalls
-            .filter(w => {
-              const side = w.id.replace('w-', '') as 'top' | 'right' | 'bottom' | 'left';
-              return !hiddenWalls.includes(side);
-            })
-            .map((w) => (
-              <Wall key={w.id} x1={w.x1} y1={w.y1} x2={w.x2} y2={w.y2} />
-            ))}
+          {/* Outer walls — visible + hidden ghosts */}
+          {rectWalls.map((w) => {
+            const isHidden = hiddenWalls.includes(w.side);
+            const isSelected = selectedWallSide === w.side;
+            const midX = (w.x1 + w.x2) / 2;
+            const midY = (w.y1 + w.y2) / 2;
+            const btnDx = w.side === 'left' ? 20 / scale : w.side === 'right' ? -20 / scale : 0;
+            const btnDy = w.side === 'top'  ? 20 / scale : w.side === 'bottom' ? -20 / scale : 0;
+
+            if (isHidden) {
+              return (
+                <Line
+                  key={w.id}
+                  points={[w.x1, w.y1, w.x2, w.y2]}
+                  stroke="#9ca3af"
+                  strokeWidth={3 / scale}
+                  dash={[8 / scale, 5 / scale]}
+                  opacity={0.6}
+                  lineCap="round"
+                  hitStrokeWidth={14 / scale}
+                  onClick={(e) => {
+                    e.cancelBubble = true;
+                    toggleWall(w.side);
+                  }}
+                />
+              );
+            }
+
+            return (
+              <Group key={w.id}>
+                <Line
+                  points={[w.x1, w.y1, w.x2, w.y2]}
+                  stroke={isSelected ? '#2563eb' : '#1f2937'}
+                  strokeWidth={6}
+                  lineCap="round"
+                  lineJoin="round"
+                  hitStrokeWidth={14}
+                  onClick={(e) => {
+                    e.cancelBubble = true;
+                    const next = isSelected ? null : w.side;
+                    setSelectedWallSide(next);
+                    selectFurniture(null);
+                    selectInteriorWall(null);
+                    setSelectedOpeningId(null);
+                  }}
+                />
+                {isSelected && (
+                  <Group
+                    x={midX + btnDx}
+                    y={midY + btnDy}
+                    onClick={(e) => {
+                      e.cancelBubble = true;
+                      toggleWall(w.side);
+                      setSelectedWallSide(null);
+                    }}
+                  >
+                    <Circle radius={14 / scale} fill="#ef4444" />
+                    <Text
+                      text="✕"
+                      fontSize={12 / scale}
+                      fill="white"
+                      fontStyle="bold"
+                      offsetX={4.5 / scale}
+                      offsetY={5.5 / scale}
+                      listening={false}
+                    />
+                  </Group>
+                )}
+              </Group>
+            );
+          })}
 
           {/* Interior walls */}
           {interiorWalls.map((iw) => {
@@ -232,6 +326,7 @@ export default function Canvas2D() {
                     selectInteriorWall(iw.id);
                     selectFurniture(null);
                     setSelectedOpeningId(null);
+                    setSelectedWallSide(null);
                   }}
                 />
                 {isSelected && (
@@ -319,10 +414,35 @@ export default function Canvas2D() {
                   setSelectedOpeningId(opening.id);
                   selectFurniture(null);
                   selectInteriorWall(null);
+                  setSelectedWallSide(null);
                 }}
               />
             );
           })}
+
+          {/* Delete button for selected opening */}
+          {selectedOpeningCenter && (
+            <Group
+              x={selectedOpeningCenter.x}
+              y={selectedOpeningCenter.y}
+              onClick={(e) => {
+                e.cancelBubble = true;
+                if (selectedOpeningId) removeWallOpening(selectedOpeningId);
+                setSelectedOpeningId(null);
+              }}
+            >
+              <Circle radius={12 / scale} fill="#ef4444" />
+              <Text
+                text="✕"
+                fontSize={10 / scale}
+                fill="white"
+                fontStyle="bold"
+                offsetX={3.5 / scale}
+                offsetY={4.5 / scale}
+                listening={false}
+              />
+            </Group>
+          )}
 
           {/* Furniture */}
           {furniture.map((item) => {

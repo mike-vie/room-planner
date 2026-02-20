@@ -5,6 +5,7 @@ import * as THREE from 'three';
 import {
   WallOpening, WallSide, InteriorWall,
   WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_SILL_HEIGHT,
+  WINDOW_TALL_WIDTH, WINDOW_TALL_HEIGHT, WINDOW_TALL_SILL_HEIGHT,
   BALCONY_DOOR_WIDTH, BALCONY_DOOR_HEIGHT, DOOR_WIDTH, DOOR_HEIGHT,
 } from '@/types';
 import { createFloorTexture, createFloorNormalMap, createFloorRoughnessMap, createWallTexture, createWallNormalMap } from './textures';
@@ -69,9 +70,9 @@ function buildWallWithOpenings(
 
   let cursor = -wallLength / 2;
   for (const opening of sorted) {
-    const ow = (opening.type === 'window' ? WINDOW_WIDTH : opening.type === 'door' ? DOOR_WIDTH : BALCONY_DOOR_WIDTH) * SCALE;
-    const oh = (opening.type === 'window' ? WINDOW_HEIGHT : opening.type === 'door' ? DOOR_HEIGHT : BALCONY_DOOR_HEIGHT) * SCALE;
-    const sillH = opening.type === 'window' ? WINDOW_SILL_HEIGHT * SCALE : 0;
+    const ow = (opening.type === 'window' ? WINDOW_WIDTH : opening.type === 'window-tall' ? WINDOW_TALL_WIDTH : opening.type === 'door' ? DOOR_WIDTH : BALCONY_DOOR_WIDTH) * SCALE;
+    const oh = (opening.type === 'window' ? WINDOW_HEIGHT : opening.type === 'window-tall' ? WINDOW_TALL_HEIGHT : opening.type === 'door' ? DOOR_HEIGHT : BALCONY_DOOR_HEIGHT) * SCALE;
+    const sillH = opening.type === 'window' ? WINDOW_SILL_HEIGHT * SCALE : opening.type === 'window-tall' ? WINDOW_TALL_SILL_HEIGHT * SCALE : 0;
     const openCenter = (opening.position * SCALE) - (wallLength / 2);
     const openLeft = openCenter - ow / 2;
     const openRight = openCenter + ow / 2;
@@ -197,9 +198,9 @@ function buildLocalWallPieces(lengthM: number, openings: WallOpening[], wallH: n
   let cursor = -lengthM / 2; // local X starts at -length/2
 
   for (const op of sorted) {
-    const ow = (op.type === 'window' ? WINDOW_WIDTH : op.type === 'door' ? DOOR_WIDTH : BALCONY_DOOR_WIDTH) * SCALE;
-    const oh = (op.type === 'window' ? WINDOW_HEIGHT : op.type === 'door' ? DOOR_HEIGHT : BALCONY_DOOR_HEIGHT) * SCALE;
-    const sillH = op.type === 'window' ? WINDOW_SILL_HEIGHT * SCALE : 0;
+    const ow = (op.type === 'window' ? WINDOW_WIDTH : op.type === 'window-tall' ? WINDOW_TALL_WIDTH : op.type === 'door' ? DOOR_WIDTH : BALCONY_DOOR_WIDTH) * SCALE;
+    const oh = (op.type === 'window' ? WINDOW_HEIGHT : op.type === 'window-tall' ? WINDOW_TALL_HEIGHT : op.type === 'door' ? DOOR_HEIGHT : BALCONY_DOOR_HEIGHT) * SCALE;
+    const sillH = op.type === 'window' ? WINDOW_SILL_HEIGHT * SCALE : op.type === 'window-tall' ? WINDOW_TALL_SILL_HEIGHT * SCALE : 0;
     const openCenterLocal = (op.position * SCALE) - (lengthM / 2);
     const openLeft = openCenterLocal - ow / 2;
     const openRight = openCenterLocal + ow / 2;

@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { PlacedFurniture, WallOpening, WallOpeningType, WallSide, InteriorWall } from '@/types';
 
-type PlacementMode = 'none' | 'window' | 'balcony-door' | 'door';
+type PlacementMode = 'none' | 'window' | 'window-tall' | 'balcony-door' | 'door';
 
 interface RoomStore {
   roomWidth: number;

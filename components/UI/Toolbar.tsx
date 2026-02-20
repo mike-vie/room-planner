@@ -89,6 +89,14 @@ export default function Toolbar({ is3DFullscreen, onToggle3DFullscreen }: Toolba
             Fenster
           </button>
           <button
+            onClick={() => setPlacementMode(placementMode === 'window-tall' ? 'none' : 'window-tall')}
+            className={`px-2 py-0.5 rounded text-sm transition-colors ${
+              placementMode === 'window-tall' ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            }`}
+          >
+            Hohes Fenster
+          </button>
+          <button
             onClick={() => setPlacementMode(placementMode === 'balcony-door' ? 'none' : 'balcony-door')}
             className={`px-2 py-0.5 rounded text-sm transition-colors ${
               placementMode === 'balcony-door' ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
