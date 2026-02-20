@@ -19,7 +19,7 @@ function checkWebGL(): boolean {
 }
 
 export default function Scene3D() {
-  const { roomWidth, roomHeight, furniture, selectedFurnitureId, selectFurniture, wallOpenings, hiddenWalls, toggleDoorOpen, wallChains } = useRoomStore();
+  const { roomWidth, roomHeight, furniture, selectedFurnitureId, selectFurniture, wallOpenings, hiddenWalls, toggleDoorOpen, interiorWalls } = useRoomStore();
 
   const camDistance = Math.max(roomWidth, roomHeight) * 0.012;
 
@@ -82,7 +82,7 @@ export default function Scene3D() {
 
           <Environment preset="apartment" />
 
-          <Room3D roomWidth={roomWidth} roomHeight={roomHeight} wallPoints={wallChains.flat()} wallOpenings={wallOpenings} hiddenWalls={hiddenWalls} onToggleDoor={toggleDoorOpen} />
+          <Room3D roomWidth={roomWidth} roomHeight={roomHeight} interiorWalls={interiorWalls} wallOpenings={wallOpenings} hiddenWalls={hiddenWalls} onToggleDoor={toggleDoorOpen} />
 
           {furniture.map((item) => {
             const def = furnitureCatalog.find((f) => f.id === item.furnitureId);

@@ -772,6 +772,287 @@ function GamingChairShape({ w, d, h, color, sel }: ShapeProps) {
   );
 }
 
+function plainMat(color: string, selected: boolean, roughness = 0.45, metalness = 0.0) {
+  return {
+    color: selected ? '#60a5fa' : color,
+    roughness,
+    metalness,
+    emissive: selected ? '#2563eb' : '#000000',
+    emissiveIntensity: selected ? 0.15 : 0,
+  };
+}
+
+function ceramicMat(color: string, selected: boolean) {
+  return { ...plainMat(color, selected, 0.08, 0.0) };
+}
+
+function StoveShape({ w, d, h, color, sel }: ShapeProps) {
+  const topT = 0.02;
+  const burnerR = w * 0.13;
+  return (
+    <group>
+      <mesh position={[0, h / 2, 0]} castShadow receiveShadow>
+        <boxGeometry args={[w, h, d]} />
+        <meshStandardMaterial {...plainMat(color, sel, 0.3, 0.55)} />
+      </mesh>
+      {/* Top surface */}
+      <mesh position={[0, h + topT / 2, 0]}>
+        <boxGeometry args={[w, topT, d]} />
+        <meshStandardMaterial {...plainMat('#1a1a1a', sel, 0.25, 0.5)} />
+      </mesh>
+      {/* 4 burners */}
+      {([[-w * 0.22, -d * 0.2], [w * 0.22, -d * 0.2], [-w * 0.22, d * 0.2], [w * 0.22, d * 0.2]] as [number, number][]).map(([bx, bz], i) => (
+        <mesh key={i} position={[bx, h + topT + 0.003, bz]}>
+          <cylinderGeometry args={[burnerR, burnerR, 0.006, 16]} />
+          <meshStandardMaterial {...plainMat('#111111', sel, 0.4, 0.3)} />
+        </mesh>
+      ))}
+      {/* Front knobs */}
+      {([-w * 0.3, -w * 0.1, w * 0.1, w * 0.3] as number[]).map((kx, i) => (
+        <mesh key={i} position={[kx, h * 0.85, d / 2 + 0.012]} rotation={[Math.PI / 2, 0, 0]}>
+          <cylinderGeometry args={[0.018, 0.018, 0.025, 12]} />
+          <meshStandardMaterial {...plainMat('#333333', sel, 0.5, 0.3)} />
+        </mesh>
+      ))}
+    </group>
+  );
+}
+
+function FridgeShape({ w, d, h, color, sel }: ShapeProps) {
+  const freezerH = h * 0.28;
+  const handleT = 0.022;
+  return (
+    <group>
+      {/* Body */}
+      <mesh position={[0, h / 2, 0]} castShadow receiveShadow>
+        <boxGeometry args={[w, h, d]} />
+        <meshStandardMaterial {...plainMat(color, sel)} />
+      </mesh>
+      {/* Freezer divider */}
+      <mesh position={[0, h - freezerH, d / 2 - 0.005]}>
+        <boxGeometry args={[w - 0.01, 0.008, 0.012]} />
+        <meshStandardMaterial {...plainMat(darken(color, 30), sel)} />
+      </mesh>
+      {/* Main door handle */}
+      <mesh position={[w / 2 - 0.04, h * 0.5, d / 2 + handleT / 2]} castShadow>
+        <boxGeometry args={[0.018, h * 0.28, handleT]} />
+        <meshStandardMaterial {...metalMat('#b0b0b0', sel)} />
+      </mesh>
+      {/* Freezer door handle */}
+      <mesh position={[w / 2 - 0.04, h - freezerH * 0.5, d / 2 + handleT / 2]} castShadow>
+        <boxGeometry args={[0.018, 0.08, handleT]} />
+        <meshStandardMaterial {...metalMat('#b0b0b0', sel)} />
+      </mesh>
+    </group>
+  );
+}
+
+function KitchenSinkShape({ w, d, h, color, sel }: ShapeProps) {
+  const basinDepth = 0.08;
+  const basinW = w * 0.42;
+  const wallT = 0.015;
+  return (
+    <group>
+      {/* Counter body */}
+      <mesh position={[0, h / 2, 0]} castShadow receiveShadow>
+        <boxGeometry args={[w, h, d]} />
+        <meshStandardMaterial {...plainMat(color, sel, 0.35, 0.45)} />
+      </mesh>
+      {/* Left basin */}
+      <mesh position={[-w * 0.22, h - basinDepth / 2 + 0.005, 0]}>
+        <boxGeometry args={[basinW - wallT * 2, basinDepth, d * 0.75 - wallT * 2]} />
+        <meshStandardMaterial {...plainMat(darken(color, 25), sel, 0.2, 0.6)} />
+      </mesh>
+      {/* Right basin */}
+      <mesh position={[w * 0.22, h - basinDepth / 2 + 0.005, 0]}>
+        <boxGeometry args={[basinW - wallT * 2, basinDepth, d * 0.75 - wallT * 2]} />
+        <meshStandardMaterial {...plainMat(darken(color, 25), sel, 0.2, 0.6)} />
+      </mesh>
+      {/* Faucet base */}
+      <mesh position={[0, h + 0.04, -d * 0.2]}>
+        <cylinderGeometry args={[0.015, 0.015, 0.08, 8]} />
+        <meshStandardMaterial {...metalMat('#a0a0a0', sel)} />
+      </mesh>
+      {/* Faucet spout */}
+      <mesh position={[0, h + 0.08, 0]} rotation={[Math.PI / 4, 0, 0]}>
+        <cylinderGeometry args={[0.01, 0.01, 0.12, 8]} />
+        <meshStandardMaterial {...metalMat('#a0a0a0', sel)} />
+      </mesh>
+    </group>
+  );
+}
+
+function KitchenUnitShape({ w, d, h, color, sel }: ShapeProps) {
+  const t = 0.018;
+  const topT = 0.03;
+  const doorCount = Math.max(1, Math.round(w / 0.6));
+  const doorW = (w - t * (doorCount + 1)) / doorCount;
+  const gap = 0.004;
+  return (
+    <group>
+      {/* Body */}
+      <mesh position={[0, h / 2, 0]} castShadow receiveShadow>
+        <boxGeometry args={[w, h - topT, d]} />
+        <meshStandardMaterial {...woodMat(color, sel)} />
+      </mesh>
+      {/* Countertop */}
+      <mesh position={[0, h - topT / 2, 0]} castShadow receiveShadow>
+        <boxGeometry args={[w + 0.02, topT, d + 0.02]} />
+        <meshStandardMaterial {...woodMat(darken(color, 15), sel)} />
+      </mesh>
+      {/* Cabinet doors */}
+      {Array.from({ length: doorCount }).map((_, i) => {
+        const px = -w / 2 + t + doorW / 2 + i * (doorW + t);
+        return (
+          <group key={i}>
+            <mesh position={[px, (h - topT) / 2, d / 2 - t / 2]} castShadow>
+              <boxGeometry args={[doorW - gap * 2, h - topT - t * 2 - gap * 2, t]} />
+              <meshStandardMaterial {...woodMat(lighten(color, 8), sel)} />
+            </mesh>
+            <mesh position={[px, (h - topT) * 0.3, d / 2 + 0.004]}>
+              <boxGeometry args={[doorW * 0.5, 0.01, 0.01]} />
+              <meshStandardMaterial {...metalMat('#999999', sel)} />
+            </mesh>
+          </group>
+        );
+      })}
+    </group>
+  );
+}
+
+function ToiletShape({ w, d, h, color, sel }: ShapeProps) {
+  const tankH = h * 0.5;
+  const tankD = d * 0.3;
+  const bowlH = h * 0.5;
+  return (
+    <group>
+      {/* Tank (cistern) at back */}
+      <mesh position={[0, tankH / 2, -d / 2 + tankD / 2]} castShadow receiveShadow>
+        <boxGeometry args={[w * 0.85, tankH, tankD]} />
+        <meshStandardMaterial {...ceramicMat(color, sel)} />
+      </mesh>
+      {/* Bowl body */}
+      <mesh position={[0, bowlH / 2, d * 0.1]} castShadow receiveShadow>
+        <boxGeometry args={[w, bowlH, d * 0.65]} />
+        <meshStandardMaterial {...ceramicMat(color, sel)} />
+      </mesh>
+      {/* Seat (lid) */}
+      <mesh position={[0, bowlH + 0.008, d * 0.1]}>
+        <boxGeometry args={[w - 0.02, 0.016, d * 0.62]} />
+        <meshStandardMaterial {...plainMat(darken(color, 10), sel, 0.3)} />
+      </mesh>
+    </group>
+  );
+}
+
+function BathtubShape({ w, d, h, color, sel }: ShapeProps) {
+  const wallT = 0.06;
+  const innerW = w - wallT * 2;
+  const innerD = d - wallT * 2;
+  const innerH = h - wallT;
+  return (
+    <group>
+      {/* Outer shell */}
+      <mesh position={[0, h / 2, 0]} castShadow receiveShadow>
+        <boxGeometry args={[w, h, d]} />
+        <meshStandardMaterial {...ceramicMat(color, sel)} />
+      </mesh>
+      {/* Inner basin (recessed, dark) */}
+      <mesh position={[0, wallT + innerH / 2, 0]}>
+        <boxGeometry args={[innerW, innerH, innerD]} />
+        <meshStandardMaterial {...ceramicMat(darken(color, 15), sel)} />
+      </mesh>
+      {/* Faucet */}
+      <mesh position={[w * 0.3, h + 0.06, -d / 2 + wallT + 0.04]}>
+        <cylinderGeometry args={[0.02, 0.02, 0.12, 8]} />
+        <meshStandardMaterial {...metalMat('#c0c0c0', sel)} />
+      </mesh>
+    </group>
+  );
+}
+
+function ShowerShape({ w, d, h, color, sel }: ShapeProps) {
+  const baseH = Math.max(h, 0.04);
+  return (
+    <group>
+      {/* Base tray */}
+      <mesh position={[0, baseH / 2, 0]} castShadow receiveShadow>
+        <boxGeometry args={[w, baseH, d]} />
+        <meshStandardMaterial {...ceramicMat(color, sel)} />
+      </mesh>
+      {/* Drain */}
+      <mesh position={[0, baseH + 0.002, 0]}>
+        <cylinderGeometry args={[0.04, 0.04, 0.004, 16]} />
+        <meshStandardMaterial {...metalMat('#888888', sel)} />
+      </mesh>
+      {/* Shower head pole */}
+      <mesh position={[w / 2 - 0.05, baseH + 1.1, -d / 2 + 0.05]}>
+        <cylinderGeometry args={[0.015, 0.015, 2.2, 8]} />
+        <meshStandardMaterial {...metalMat('#c0c0c0', sel)} />
+      </mesh>
+      {/* Shower head */}
+      <mesh position={[w / 2 - 0.05, baseH + 2.1, 0]} rotation={[Math.PI / 6, 0, 0]}>
+        <cylinderGeometry args={[0.06, 0.06, 0.018, 12]} />
+        <meshStandardMaterial {...metalMat('#b0b0b0', sel)} />
+      </mesh>
+    </group>
+  );
+}
+
+function WashbasinShape({ w, d, h, color, sel }: ShapeProps) {
+  const pedestalH = 0.35;
+  const basinH = 0.12;
+  const basinDepth = 0.06;
+  return (
+    <group>
+      {/* Pedestal */}
+      <mesh position={[0, pedestalH / 2, 0]} castShadow receiveShadow>
+        <boxGeometry args={[w * 0.4, pedestalH, d * 0.4]} />
+        <meshStandardMaterial {...ceramicMat(color, sel)} />
+      </mesh>
+      {/* Basin body */}
+      <mesh position={[0, pedestalH + basinH / 2, 0]} castShadow receiveShadow>
+        <boxGeometry args={[w, basinH, d]} />
+        <meshStandardMaterial {...ceramicMat(color, sel)} />
+      </mesh>
+      {/* Basin interior */}
+      <mesh position={[0, pedestalH + basinH - basinDepth / 2, 0]}>
+        <boxGeometry args={[w - 0.04, basinDepth, d - 0.04]} />
+        <meshStandardMaterial {...ceramicMat(darken(color, 12), sel)} />
+      </mesh>
+      {/* Faucet */}
+      <mesh position={[0, pedestalH + basinH + 0.07, -d / 2 + 0.08]}>
+        <cylinderGeometry args={[0.014, 0.014, 0.14, 8]} />
+        <meshStandardMaterial {...metalMat('#b0b0b0', sel)} />
+      </mesh>
+    </group>
+  );
+}
+
+function MirrorShape({ w, d, h, color, sel }: ShapeProps) {
+  const frameT = 0.015;
+  return (
+    <group>
+      {/* Frame */}
+      <mesh position={[0, h / 2, 0]} castShadow>
+        <boxGeometry args={[w + frameT * 2, h + frameT * 2, d]} />
+        <meshStandardMaterial {...plainMat(darken(color, 20), sel, 0.4)} />
+      </mesh>
+      {/* Mirror surface */}
+      <mesh position={[0, h / 2, d / 2 + 0.001]}>
+        <boxGeometry args={[w, h, 0.002]} />
+        <meshStandardMaterial
+          color={sel ? '#60a5fa' : color}
+          roughness={0.0}
+          metalness={0.9}
+          emissive={sel ? '#2563eb' : '#000000'}
+          emissiveIntensity={sel ? 0.15 : 0}
+        />
+      </mesh>
+    </group>
+  );
+}
+
 function ShapeRenderer({ shape, series, ...props }: ShapeProps & { shape: FurnitureShape; series: string }) {
   switch (shape) {
     case 'wardrobe': return <WardrobeShape {...props} />;
@@ -786,6 +1067,15 @@ function ShapeRenderer({ shape, series, ...props }: ShapeProps & { shape: Furnit
     case 'tv-unit': return <TvUnitShape {...props} />;
     case 'gaming-desk': return <GamingDeskShape {...props} />;
     case 'gaming-chair': return <GamingChairShape {...props} />;
+    case 'stove': return <StoveShape {...props} />;
+    case 'fridge': return <FridgeShape {...props} />;
+    case 'kitchen-sink': return <KitchenSinkShape {...props} />;
+    case 'kitchen-unit': return <KitchenUnitShape {...props} />;
+    case 'toilet': return <ToiletShape {...props} />;
+    case 'bathtub': return <BathtubShape {...props} />;
+    case 'shower': return <ShowerShape {...props} />;
+    case 'washbasin': return <WashbasinShape {...props} />;
+    case 'mirror': return <MirrorShape {...props} />;
   }
 }
 

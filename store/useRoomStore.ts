@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { PlacedFurniture, WallOpening, WallOpeningType, WallSide, WallPoint } from '@/types';
+import { PlacedFurniture, WallOpening, WallOpeningType, WallSide, InteriorWall } from '@/types';
 
 type PlacementMode = 'none' | 'window' | 'balcony-door' | 'door';
 
@@ -12,8 +12,9 @@ interface RoomStore {
   selectedFurnitureId: string | null;
   placementMode: PlacementMode;
   hiddenWalls: WallSide[];
-  wallChains: WallPoint[][];  // [] = rectangle mode; each chain ≥2 pts = custom wall segment
-  drawingWalls: boolean;      // wall drawing mode active (not persisted)
+  interiorWalls: InteriorWall[];
+  drawingInteriorWall: boolean;       // transient (not persisted)
+  selectedInteriorWallId: string | null; // transient
 
   setRoomSize: (width: number, height: number) => void;
   addFurniture: (furnitureId: string) => void;
@@ -27,9 +28,10 @@ interface RoomStore {
   toggleWall: (wall: WallSide) => void;
   toggleDoorOpen: (id: string) => void;
   clearAll: () => void;
-  addWallChain: (chain: WallPoint[]) => void;  // save one chain; drawing mode stays active
-  setDrawingWalls: (active: boolean) => void;
-  resetWalls: () => void;
+  addInteriorWall: (wall: InteriorWall) => void;
+  removeInteriorWall: (id: string) => void;
+  setDrawingInteriorWall: (active: boolean) => void;
+  selectInteriorWall: (id: string | null) => void;
 }
 
 export const useRoomStore = create<RoomStore>()(
@@ -42,8 +44,9 @@ export const useRoomStore = create<RoomStore>()(
       selectedFurnitureId: null,
       placementMode: 'none' as PlacementMode,
       hiddenWalls: ['bottom', 'right'] as WallSide[],
-      wallChains: [],
-      drawingWalls: false,
+      interiorWalls: [],
+      drawingInteriorWall: false,
+      selectedInteriorWallId: null,
 
       setRoomSize: (width, height) => set({ roomWidth: width, roomHeight: height }),
 
@@ -56,6 +59,7 @@ export const useRoomStore = create<RoomStore>()(
             { id, furnitureId, x: roomWidth / 2, y: roomHeight / 2, rotation: 0 },
           ],
           selectedFurnitureId: id,
+          selectedInteriorWallId: null,
         }));
       },
 
@@ -70,7 +74,7 @@ export const useRoomStore = create<RoomStore>()(
           selectedFurnitureId: state.selectedFurnitureId === id ? null : state.selectedFurnitureId,
         })),
 
-      selectFurniture: (id) => set({ selectedFurnitureId: id }),
+      selectFurniture: (id) => set({ selectedFurnitureId: id, selectedInteriorWallId: id ? null : undefined }),
 
       setPlacementMode: (mode) => set({ placementMode: mode }),
 
@@ -106,32 +110,38 @@ export const useRoomStore = create<RoomStore>()(
           ),
         })),
 
-      clearAll: () => set({ furniture: [], wallOpenings: [], selectedFurnitureId: null, placementMode: 'none' as PlacementMode }),
+      clearAll: () => set({
+        furniture: [],
+        wallOpenings: [],
+        interiorWalls: [],
+        selectedFurnitureId: null,
+        selectedInteriorWallId: null,
+        placementMode: 'none' as PlacementMode,
+      }),
 
-      addWallChain: (chain) =>
-        set((state) => ({ wallChains: [...state.wallChains, chain] })),
-        // Note: drawingWalls is intentionally NOT changed here — user stays in drawing mode
+      addInteriorWall: (wall) =>
+        set((state) => ({ interiorWalls: [...state.interiorWalls, wall] })),
 
-      setDrawingWalls: (active) => set({ drawingWalls: active }),
-
-      resetWalls: () =>
+      removeInteriorWall: (id) =>
         set((state) => ({
-          wallChains: [],
-          drawingWalls: false,
-          // Remove custom-wall openings (their segments no longer exist)
-          wallOpenings: state.wallOpenings.filter((o) => !o.wallSegmentId),
+          interiorWalls: state.interiorWalls.filter((w) => w.id !== id),
+          wallOpenings: state.wallOpenings.filter((o) => o.wallSegmentId !== id),
+          selectedInteriorWallId: state.selectedInteriorWallId === id ? null : state.selectedInteriorWallId,
         })),
+
+      setDrawingInteriorWall: (active) => set({ drawingInteriorWall: active }),
+
+      selectInteriorWall: (id) => set({ selectedInteriorWallId: id }),
     }),
     {
       name: 'room-planner-storage',
-      // Don't persist transient UI state
       partialize: (state) => ({
         roomWidth: state.roomWidth,
         roomHeight: state.roomHeight,
         furniture: state.furniture,
         wallOpenings: state.wallOpenings,
         hiddenWalls: state.hiddenWalls,
-        wallChains: state.wallChains,
+        interiorWalls: state.interiorWalls,
       }),
     }
   )

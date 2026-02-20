@@ -19,6 +19,9 @@ export interface CustomWallSegment {
   y2: number;
 }
 
+// Interior walls are structurally identical to CustomWallSegment
+export type InteriorWall = CustomWallSegment;
+
 export interface PlacedFurniture {
   id: string;
   furnitureId: string;
@@ -33,8 +36,8 @@ export type WallOpeningType = 'window' | 'balcony-door' | 'door';
 
 export interface WallOpening {
   id: string;
-  wall?: WallSide;          // rectangle mode
-  wallSegmentId?: string;   // polygon mode
+  wall?: WallSide;          // rectangle mode (outer walls)
+  wallSegmentId?: string;   // interior wall mode
   type: WallOpeningType;
   position: number; // cm along the wall / segment (center of opening)
   isOpen?: boolean;
@@ -56,13 +59,15 @@ export const DOOR_HEIGHT = 210;
 export type FurnitureShape =
   | 'wardrobe' | 'shelf' | 'bed' | 'table' | 'sofa'
   | 'chair' | 'desk' | 'dresser' | 'nightstand' | 'tv-unit'
-  | 'gaming-desk' | 'gaming-chair';
+  | 'gaming-desk' | 'gaming-chair'
+  | 'stove' | 'fridge' | 'kitchen-sink' | 'kitchen-unit'
+  | 'toilet' | 'bathtub' | 'shower' | 'washbasin' | 'mirror';
 
 export interface FurnitureDef {
   id: string;
   name: string;
   series: string;
-  category: 'Schlafen' | 'Wohnen' | 'Arbeiten' | 'Aufbewahrung';
+  category: 'Schlafen' | 'Wohnen' | 'Arbeiten' | 'Aufbewahrung' | 'Küche' | 'Bad';
   width: number;   // cm
   depth: number;   // cm
   height: number;  // cm

@@ -3,7 +3,7 @@
 import { useMemo } from 'react';
 import * as THREE from 'three';
 import {
-  WallOpening, WallSide, WallPoint,
+  WallOpening, WallSide, InteriorWall,
   WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_SILL_HEIGHT,
   BALCONY_DOOR_WIDTH, BALCONY_DOOR_HEIGHT, DOOR_WIDTH, DOOR_HEIGHT,
 } from '@/types';
@@ -19,7 +19,7 @@ const WALL_COLOR = '#f2efe9';
 interface Room3DProps {
   roomWidth: number;
   roomHeight: number;
-  wallPoints?: WallPoint[];
+  interiorWalls?: InteriorWall[];
   wallOpenings?: WallOpening[];
   hiddenWalls?: WallSide[];
   onToggleDoor?: (id: string) => void;
@@ -266,10 +266,9 @@ function LocalDoor3D({ opening, lengthM, onToggle }: { opening: WallOpening; len
 
 // --- Main Room3D ---
 export default function Room3D({
-  roomWidth, roomHeight, wallPoints = [], wallOpenings = [],
+  roomWidth, roomHeight, interiorWalls = [], wallOpenings = [],
   hiddenWalls: hiddenWallsProp = ['bottom', 'right'], onToggleDoor,
 }: Room3DProps) {
-  const isPolygonMode = wallPoints.length >= 3;
   const w = roomWidth * SCALE;
   const d = roomHeight * SCALE;
   const h = WALL_HEIGHT;
@@ -283,84 +282,6 @@ export default function Room3D({
   const wallTexSide   = useMemo(() => { const tx = createWallTexture('#edeae4'); tx.repeat.set(d, h); return tx; }, [d, h]);
   const wallNormal    = useMemo(() => { const tx = createWallNormalMap();       tx.repeat.set(3, 3); return tx; }, []);
 
-  // Polygon floor shape
-  const polyFloorShape = useMemo(() => {
-    if (!isPolygonMode) return null;
-    const shape = new THREE.Shape();
-    const pts = wallPoints.map(p => new THREE.Vector2(
-      (p.x - roomWidth / 2) * SCALE,
-      (p.y - roomHeight / 2) * SCALE,
-    ));
-    shape.setFromPoints(pts);
-    return shape;
-  }, [isPolygonMode, wallPoints, roomWidth, roomHeight]);
-
-  if (isPolygonMode && polyFloorShape) {
-    // ---- POLYGON MODE ----
-    return (
-      <group>
-        {/* Floor */}
-        <mesh rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
-          <shapeGeometry args={[polyFloorShape]} />
-          <meshStandardMaterial
-            map={floorTex} normalMap={floorNormal}
-            normalScale={new THREE.Vector2(0.3, 0.3)}
-            roughnessMap={floorRoughness} roughness={0.7} metalness={0.02}
-            side={THREE.DoubleSide}
-          />
-        </mesh>
-
-        {/* Polygon walls */}
-        {wallPoints.map((pt, i) => {
-          const next = wallPoints[(i + 1) % wallPoints.length];
-          const segId = `poly-seg-${i}`;
-          const x1 = (pt.x   - roomWidth  / 2) * SCALE;
-          const z1 = (pt.y   - roomHeight / 2) * SCALE;
-          const x2 = (next.x - roomWidth  / 2) * SCALE;
-          const z2 = (next.y - roomHeight / 2) * SCALE;
-          const dx = x2 - x1, dz = z2 - z1;
-          const lengthM = Math.hypot(dx, dz);
-          if (lengthM < 0.01) return null;
-          const midX = (x1 + x2) / 2;
-          const midZ = (z1 + z2) / 2;
-          const rotY = Math.atan2(-dz, dx);
-
-          const segOpenings = wallOpenings.filter(o => o.wallSegmentId === segId);
-          const pieces = buildLocalWallPieces(lengthM, segOpenings, h, t);
-
-          return (
-            <group key={segId} position={[midX, 0, midZ]} rotation={[0, rotY, 0]}>
-              {pieces.map((piece, pi) => (
-                <mesh key={pi} position={[piece.x, piece.y, 0]} castShadow={!piece.transparent} receiveShadow={!piece.transparent}>
-                  <boxGeometry args={[piece.w, piece.h, piece.color === '#ffffff' ? t + 0.01 : piece.transparent ? 0.01 : t]} />
-                  <meshStandardMaterial
-                    map={piece.color === WALL_COLOR ? wallTexBack : undefined}
-                    normalMap={piece.color === WALL_COLOR ? wallNormal : undefined}
-                    normalScale={piece.color === WALL_COLOR ? new THREE.Vector2(0.15, 0.15) : undefined}
-                    color={piece.color === WALL_COLOR ? '#ffffff' : piece.color}
-                    roughness={piece.transparent ? 0.05 : piece.color === '#ffffff' ? 0.4 : 0.92}
-                    metalness={piece.transparent ? 0.1 : 0}
-                    transparent={piece.transparent} opacity={piece.opacity ?? 1}
-                  />
-                </mesh>
-              ))}
-              {/* Doors in local wall space */}
-              {segOpenings.filter(o => o.type === 'door').map(o => (
-                <LocalDoor3D key={o.id} opening={o} lengthM={lengthM} onToggle={() => onToggleDoor?.(o.id)} />
-              ))}
-              {/* Baseboard */}
-              <mesh position={[0, BASEBOARD_HEIGHT / 2, -t / 2 - BASEBOARD_DEPTH / 2]} receiveShadow>
-                <boxGeometry args={[lengthM, BASEBOARD_HEIGHT, BASEBOARD_DEPTH]} />
-                <meshStandardMaterial color="#e8e3dc" roughness={0.6} />
-              </mesh>
-            </group>
-          );
-        })}
-      </group>
-    );
-  }
-
-  // ---- RECTANGLE MODE (unchanged) ----
   const hiddenWalls = new Set<WallSide>(hiddenWallsProp);
   const openingsByWall: Record<WallSide, WallOpening[]> = {
     top:    wallOpenings.filter(o => o.wall === 'top'),
@@ -412,10 +333,42 @@ export default function Room3D({
         <meshStandardMaterial color="#e8e3dc" roughness={0.6} />
       </mesh>
 
-      {/* Interactive doors */}
+      {/* Interactive doors (outer walls) */}
       {wallOpenings.filter(o => o.type === 'door' && o.wall).map(opening => (
         <Door3D key={opening.id} opening={opening} roomW={w} roomD={d} onToggle={() => onToggleDoor?.(opening.id)} />
       ))}
+
+      {/* Interior walls */}
+      {interiorWalls.map(iw => {
+        const dx3d = (iw.x2 - iw.x1) * SCALE;
+        const dz3d = (iw.y2 - iw.y1) * SCALE;
+        const lengthM = Math.hypot(dx3d, dz3d);
+        if (lengthM < 0.01) return null;
+        const midX = ((iw.x1 + iw.x2) / 2 - roomWidth / 2) * SCALE;
+        const midZ = ((iw.y1 + iw.y2) / 2 - roomHeight / 2) * SCALE;
+        const rotY = Math.atan2(-dz3d, dx3d);
+        const iwOpenings = wallOpenings.filter(o => o.wallSegmentId === iw.id);
+        const pieces = buildLocalWallPieces(lengthM, iwOpenings, h, t);
+        return (
+          <group key={iw.id} position={[midX, 0, midZ]} rotation={[0, rotY, 0]}>
+            {pieces.map((piece, pi) => (
+              <mesh key={pi} position={[piece.x, piece.y, 0]} castShadow={!piece.transparent} receiveShadow={!piece.transparent}>
+                <boxGeometry args={[piece.w, piece.h, piece.transparent ? 0.01 : t]} />
+                <meshStandardMaterial
+                  color={piece.color}
+                  roughness={piece.transparent ? 0.05 : piece.color === '#ffffff' ? 0.4 : 0.9}
+                  metalness={piece.transparent ? 0.1 : 0}
+                  transparent={piece.transparent}
+                  opacity={piece.opacity ?? 1}
+                />
+              </mesh>
+            ))}
+            {iwOpenings.filter(o => o.type === 'door').map(o => (
+              <LocalDoor3D key={o.id} opening={o} lengthM={lengthM} onToggle={() => onToggleDoor?.(o.id)} />
+            ))}
+          </group>
+        );
+      })}
     </group>
   );
 }
