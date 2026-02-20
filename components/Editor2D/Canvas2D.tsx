@@ -9,7 +9,7 @@ import FurnitureItem2D from './FurnitureItem2D';
 import WallOpening2D from './WallOpening2D';
 import { useRoomStore } from '@/store/useRoomStore';
 import { furnitureCatalog } from '@/data/furniture-catalog';
-import { WallPoint, CustomWallSegment, WallOpening, InteriorWall, WallSide, WINDOW_WIDTH, WINDOW_TALL_WIDTH, BALCONY_DOOR_WIDTH, DOOR_WIDTH } from '@/types';
+import { WallPoint, CustomWallSegment, WallSide, WINDOW_WIDTH, WINDOW_TALL_WIDTH, BALCONY_DOOR_WIDTH, DOOR_WIDTH } from '@/types';
 
 function snapToGrid(x: number, y: number, grid = 10): WallPoint {
   return { x: Math.round(x / grid) * grid, y: Math.round(y / grid) * grid };
@@ -25,27 +25,6 @@ function ptToSeg(px: number, py: number, x1: number, y1: number, x2: number, y2:
   return { dist, pos: t * Math.sqrt(lenSq) };
 }
 
-// Center of a wall opening in room coordinates
-function getOpeningCenter(
-  opening: WallOpening, rW: number, rH: number, iWalls: InteriorWall[]
-): { x: number; y: number } | null {
-  if (opening.wallSegmentId) {
-    const seg = iWalls.find(w => w.id === opening.wallSegmentId);
-    if (!seg) return null;
-    const dx = seg.x2 - seg.x1, dy = seg.y2 - seg.y1;
-    const len = Math.hypot(dx, dy);
-    if (len < 0.01) return null;
-    return { x: seg.x1 + (dx / len) * opening.position, y: seg.y1 + (dy / len) * opening.position };
-  }
-  switch (opening.wall) {
-    case 'top':    return { x: opening.position, y: 0 };
-    case 'bottom': return { x: opening.position, y: rH };
-    case 'left':   return { x: 0,  y: opening.position };
-    case 'right':  return { x: rW, y: opening.position };
-    default:       return null;
-  }
-}
-
 export default function Canvas2D() {
   const {
     roomWidth, roomHeight, furniture, selectedFurnitureId, selectFurniture,
@@ -53,7 +32,6 @@ export default function Canvas2D() {
     hiddenWalls, toggleWall,
     interiorWalls, drawingInteriorWall, selectedInteriorWallId,
     addInteriorWall, removeInteriorWall, setDrawingInteriorWall, selectInteriorWall,
-    removeWallOpening,
   } = useRoomStore();
 
   const [selectedOpeningId, setSelectedOpeningId] = useState<string | null>(null);
@@ -209,11 +187,6 @@ export default function Canvas2D() {
     drawingInteriorWall, drawStartPt, interiorWalls, addInteriorWall,
   ]);
 
-  // Center of selected opening (for × button)
-  const selectedOpening = selectedOpeningId ? wallOpenings.find(o => o.id === selectedOpeningId) : null;
-  const selectedOpeningCenter = selectedOpening
-    ? getOpeningCenter(selectedOpening, roomWidth, roomHeight, interiorWalls)
-    : null;
 
   return (
     <div ref={containerRef} className={`w-full h-full bg-gray-50 ${drawingInteriorWall ? 'cursor-crosshair' : ''}`}>
@@ -314,6 +287,11 @@ export default function Canvas2D() {
             const midX = (iw.x1 + iw.x2) / 2;
             const midY = (iw.y1 + iw.y2) / 2;
             const lenCm = Math.round(Math.hypot(iw.x2 - iw.x1, iw.y2 - iw.y1));
+            // Perpendicular offset so delete button sits off the wall line
+            const wallLen = Math.hypot(iw.x2 - iw.x1, iw.y2 - iw.y1);
+            const perpX = wallLen > 0.01 ? -(iw.y2 - iw.y1) / wallLen : 0;
+            const perpY = wallLen > 0.01 ?  (iw.x2 - iw.x1) / wallLen : 1;
+            const btnOff = 22 / scale;
             return (
               <Group key={iw.id}>
                 <Line
@@ -321,6 +299,7 @@ export default function Canvas2D() {
                   stroke={isSelected ? '#2563eb' : '#1f2937'}
                   strokeWidth={6}
                   lineCap="round"
+                  hitStrokeWidth={20}
                   onClick={(e) => {
                     e.cancelBubble = true;
                     selectInteriorWall(iw.id);
@@ -331,20 +310,20 @@ export default function Canvas2D() {
                 />
                 {isSelected && (
                   <>
-                    {/* Length label */}
+                    {/* Length label — offset perpendicular to wall */}
                     <Text
-                      x={midX + 8 / scale}
-                      y={midY - 18 / scale}
+                      x={midX + perpX * (btnOff + 18 / scale)}
+                      y={midY + perpY * (btnOff + 18 / scale) - 6 / scale}
                       text={`${lenCm} cm`}
                       fontSize={13 / scale}
                       fill="#2563eb"
                       fontStyle="bold"
                       listening={false}
                     />
-                    {/* Delete button */}
+                    {/* Delete button — perpendicular to wall, off the line */}
                     <Group
-                      x={midX}
-                      y={midY}
+                      x={midX + perpX * btnOff}
+                      y={midY + perpY * btnOff}
                       onClick={(e) => { e.cancelBubble = true; removeInteriorWall(iw.id); }}
                     >
                       <Circle radius={14 / scale} fill="#ef4444" />
@@ -410,6 +389,7 @@ export default function Canvas2D() {
                 roomHeight={roomHeight}
                 isSelected={selectedOpeningId === opening.id}
                 segment={seg}
+                scale={scale}
                 onSelect={() => {
                   setSelectedOpeningId(opening.id);
                   selectFurniture(null);
@@ -419,30 +399,6 @@ export default function Canvas2D() {
               />
             );
           })}
-
-          {/* Delete button for selected opening */}
-          {selectedOpeningCenter && (
-            <Group
-              x={selectedOpeningCenter.x}
-              y={selectedOpeningCenter.y}
-              onClick={(e) => {
-                e.cancelBubble = true;
-                if (selectedOpeningId) removeWallOpening(selectedOpeningId);
-                setSelectedOpeningId(null);
-              }}
-            >
-              <Circle radius={12 / scale} fill="#ef4444" />
-              <Text
-                text="✕"
-                fontSize={10 / scale}
-                fill="white"
-                fontStyle="bold"
-                offsetX={3.5 / scale}
-                offsetY={4.5 / scale}
-                listening={false}
-              />
-            </Group>
-          )}
 
           {/* Furniture */}
           {furniture.map((item) => {

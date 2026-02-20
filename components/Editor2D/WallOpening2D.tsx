@@ -1,6 +1,6 @@
 'use client';
 
-import { Group, Rect, Line, Arc } from 'react-konva';
+import { Group, Rect, Line, Arc, Circle, Text } from 'react-konva';
 import { WallOpening, CustomWallSegment, WINDOW_WIDTH, WINDOW_TALL_WIDTH, BALCONY_DOOR_WIDTH, DOOR_WIDTH } from '@/types';
 import { useRoomStore } from '@/store/useRoomStore';
 import { useEffect } from 'react';
@@ -11,7 +11,8 @@ interface WallOpening2DProps {
   roomHeight: number;
   isSelected: boolean;
   onSelect: () => void;
-  segment?: CustomWallSegment; // provided in polygon mode
+  segment?: CustomWallSegment;
+  scale: number;
 }
 
 function getOpeningWidth(type: WallOpening['type']): number {
@@ -26,7 +27,7 @@ function getOpeningWidth(type: WallOpening['type']): number {
 type OpeningTransform = {
   x: number;
   y: number;
-  rotation: number;        // degrees — Group rotation = this - 90
+  rotation: number;
   wallLength: number;
   dragAxis: 'x' | 'y' | null;
 };
@@ -53,7 +54,7 @@ function getSegmentOpeningTransform(opening: WallOpening, seg: CustomWallSegment
   return { x: cx, y: cy, rotation: angleDeg, dragAxis: null, wallLength: len };
 }
 
-export default function WallOpening2D({ opening, roomWidth, roomHeight, isSelected, onSelect, segment }: WallOpening2DProps) {
+export default function WallOpening2D({ opening, roomWidth, roomHeight, isSelected, onSelect, segment, scale }: WallOpening2DProps) {
   const { updateWallOpening, removeWallOpening, toggleDoorOpen } = useRoomStore();
   const openingWidth = getOpeningWidth(opening.type);
   const halfW = openingWidth / 2;
@@ -83,7 +84,6 @@ export default function WallOpening2D({ opening, roomWidth, roomHeight, isSelect
     let resetY: number;
 
     if (segment) {
-      // Project onto segment
       const dx = segment.x2 - segment.x1;
       const dy = segment.y2 - segment.y1;
       const lenSq = dx * dx + dy * dy;
@@ -107,6 +107,10 @@ export default function WallOpening2D({ opening, roomWidth, roomHeight, isSelect
     updateWallOpening(opening.id, { position: newPosition });
     node.position({ x: resetX, y: resetY });
   };
+
+  // Delete button: positioned to the right of the opening in local space (avoids blocking drag)
+  const btnR = 11 / scale;
+  const btnX = halfW + btnR + 6 / scale;
 
   return (
     <Group
@@ -148,6 +152,26 @@ export default function WallOpening2D({ opening, roomWidth, roomHeight, isSelect
           <Line points={[-halfW, wallThickness / 2, halfW, wallThickness / 2]}   stroke={isSelected ? '#2563eb' : '#7c3aed'} strokeWidth={isSelected ? 2.5 : 2} />
           <Arc x={-halfW} y={wallThickness / 2} innerRadius={0} outerRadius={openingWidth} angle={90} rotation={-90}
             fill="rgba(124,58,237,0.05)" stroke={isSelected ? '#2563eb' : '#7c3aed'} strokeWidth={1} dash={[4, 4]} />
+        </Group>
+      )}
+
+      {/* Delete button — positioned outside the opening to not block drag */}
+      {isSelected && (
+        <Group
+          x={btnX}
+          y={0}
+          onClick={(e) => { e.cancelBubble = true; removeWallOpening(opening.id); }}
+        >
+          <Circle radius={btnR} fill="#ef4444" />
+          <Text
+            text="✕"
+            fontSize={btnR * 1.1}
+            fill="white"
+            fontStyle="bold"
+            offsetX={btnR * 0.37}
+            offsetY={btnR * 0.45}
+            listening={false}
+          />
         </Group>
       )}
     </Group>
