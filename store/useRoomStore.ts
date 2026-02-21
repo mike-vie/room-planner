@@ -74,7 +74,9 @@ export const useRoomStore = create<RoomStore>()(
           selectedFurnitureId: state.selectedFurnitureId === id ? null : state.selectedFurnitureId,
         })),
 
-      selectFurniture: (id) => set({ selectedFurnitureId: id, selectedInteriorWallId: id ? null : undefined }),
+      selectFurniture: (id) => set(id !== null
+        ? { selectedFurnitureId: id, selectedInteriorWallId: null }
+        : { selectedFurnitureId: null }),
 
       setPlacementMode: (mode) => set({ placementMode: mode }),
 

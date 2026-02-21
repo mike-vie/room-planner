@@ -13,6 +13,7 @@ export default function Toolbar({ is3DFullscreen, onToggle3DFullscreen }: Toolba
     roomWidth, roomHeight, setRoomSize, clearAll, furniture,
     placementMode, setPlacementMode, hiddenWalls, toggleWall,
     drawingInteriorWall, setDrawingInteriorWall,
+    interiorWalls, selectedInteriorWallId, selectInteriorWall, removeInteriorWall,
   } = useRoomStore();
   const [width, setWidth] = useState(roomWidth.toString());
   const [height, setHeight] = useState(roomHeight.toString());
@@ -26,7 +27,7 @@ export default function Toolbar({ is3DFullscreen, onToggle3DFullscreen }: Toolba
   };
 
   return (
-    <div className="flex items-center gap-4 px-4 py-2 bg-white border-b border-gray-200 flex-wrap">
+    <div className="flex items-center gap-3 px-4 py-2 bg-white border-b border-gray-200 flex-wrap">
       <span className="font-semibold text-sm">Raumplaner</span>
       <div className="h-4 w-px bg-gray-300" />
 
@@ -74,6 +75,7 @@ export default function Toolbar({ is3DFullscreen, onToggle3DFullscreen }: Toolba
           1. Klick = Startpunkt · 2. Klick = Endpunkt · Esc = Abbrechen
         </span>
       )}
+
 
       {!drawingInteriorWall && (
         <>
@@ -144,8 +146,11 @@ export default function Toolbar({ is3DFullscreen, onToggle3DFullscreen }: Toolba
 
       <div className="h-4 w-px bg-gray-300" />
       <span className="text-xs text-gray-500">{furniture.length} Möbel</span>
+
       <div className="flex-1" />
-      <button
+
+
+<button
         onClick={onToggle3DFullscreen}
         title={is3DFullscreen ? 'Vollbild beenden' : '3D Vollbild'}
         className="flex items-center gap-1.5 px-2 py-0.5 bg-gray-100 text-gray-700 rounded text-sm hover:bg-gray-200 transition-colors"
@@ -163,6 +168,28 @@ export default function Toolbar({ is3DFullscreen, onToggle3DFullscreen }: Toolba
         )}
         {is3DFullscreen ? 'Vollbild beenden' : '3D Vollbild'}
       </button>
+      <div className="flex items-center gap-1 border border-gray-300 rounded px-2 py-0.5 bg-gray-50">
+        <span className="text-xs text-gray-500 font-medium whitespace-nowrap">Innenwände:</span>
+        {interiorWalls.length === 0 && <span className="text-xs text-gray-400">–</span>}
+        {interiorWalls.map((iw, i) => {
+          const len = Math.round(Math.hypot(iw.x2 - iw.x1, iw.y2 - iw.y1));
+          const isSelected = selectedInteriorWallId === iw.id;
+          return (
+            <span key={iw.id} className="flex items-center gap-0.5">
+              <button
+                onClick={() => selectInteriorWall(isSelected ? null : iw.id)}
+                className={`text-xs px-1 rounded ${isSelected ? 'bg-blue-500 text-white' : 'text-gray-700 hover:bg-gray-200'}`}
+              >
+                W{i + 1}
+              </button>
+              <button
+                onClick={() => removeInteriorWall(iw.id)}
+                className="text-gray-400 hover:text-red-500 text-xs leading-none"
+              >×</button>
+            </span>
+          );
+        })}
+      </div>
       <button
         onClick={clearAll}
         className="px-2 py-0.5 bg-red-500 text-white rounded text-sm hover:bg-red-600 transition-colors"

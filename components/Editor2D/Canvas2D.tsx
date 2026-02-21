@@ -132,6 +132,7 @@ export default function Canvas2D() {
         addInteriorWall({ id, x1: drawStartPt.x, y1: drawStartPt.y, x2: roomPt.x, y2: roomPt.y });
         setDrawStartPt(null);
         setPreviewPt(null);
+        setDrawingInteriorWall(false);
       }
       return;
     }
@@ -184,7 +185,7 @@ export default function Canvas2D() {
   }, [
     selectFurniture, selectInteriorWall, placementMode, addWallOpening, setPlacementMode,
     offsetX, offsetY, scale, roomWidth, roomHeight,
-    drawingInteriorWall, drawStartPt, interiorWalls, addInteriorWall,
+    drawingInteriorWall, drawStartPt, interiorWalls, addInteriorWall, setDrawingInteriorWall,
   ]);
 
 
@@ -293,20 +294,23 @@ export default function Canvas2D() {
             const perpY = wallLen > 0.01 ?  (iw.x2 - iw.x1) / wallLen : 1;
             const btnOff = 22 / scale;
             return (
-              <Group key={iw.id}>
+              <Group
+                key={iw.id}
+                onClick={(e) => {
+                  e.cancelBubble = true;
+                  if (drawingInteriorWall) { setDrawStartPt(null); setPreviewPt(null); setDrawingInteriorWall(false); }
+                  selectInteriorWall(iw.id);
+                  selectFurniture(null);
+                  setSelectedOpeningId(null);
+                  setSelectedWallSide(null);
+                }}
+              >
                 <Line
                   points={[iw.x1, iw.y1, iw.x2, iw.y2]}
                   stroke={isSelected ? '#2563eb' : '#1f2937'}
                   strokeWidth={6}
                   lineCap="round"
-                  hitStrokeWidth={20}
-                  onClick={(e) => {
-                    e.cancelBubble = true;
-                    selectInteriorWall(iw.id);
-                    selectFurniture(null);
-                    setSelectedOpeningId(null);
-                    setSelectedWallSide(null);
-                  }}
+                  hitStrokeWidth={30 / scale}
                 />
                 {isSelected && (
                   <>

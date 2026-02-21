@@ -51,7 +51,7 @@ export default function Scene3D() {
   return (
     <div className="w-full h-full bg-gradient-to-b from-sky-100 to-sky-50">
       <Canvas
-        shadows
+        shadows="percentage"
         camera={{
           position: [camDistance * 0.8, camDistance * 0.7, camDistance * 0.8],
           fov: 50,
