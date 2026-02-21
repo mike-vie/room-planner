@@ -15,6 +15,8 @@ export const furnitureCatalog: FurnitureDef[] = [
   { id: 'malm-140', name: 'Doppelbett 140cm', series: 'Bett', category: 'Schlafen', width: 140, depth: 200, height: 38, color: '#a08868', shape: 'bed' },
   { id: 'malm-120-220', name: 'Einzelbett 120×220', series: 'Bett', category: 'Schlafen', width: 120, depth: 220, height: 38, color: '#a08868', shape: 'bed' },
   { id: 'malm-110-220', name: 'Einzelbett 110×220', series: 'Bett', category: 'Schlafen', width: 110, depth: 220, height: 38, color: '#a08868', shape: 'bed' },
+  { id: 'einzelbett-100-220', name: 'Einzelbett 100×220', series: 'Bett', category: 'Schlafen', width: 100, depth: 220, height: 38, color: '#a08868', shape: 'bed' },
+  { id: 'einzelbett-90-220', name: 'Einzelbett 90×220', series: 'Bett', category: 'Schlafen', width: 90, depth: 220, height: 38, color: '#a08868', shape: 'bed' },
   { id: 'malm-nachttisch', name: 'Nachttisch schmal', series: 'Nachttisch', category: 'Schlafen', width: 40, depth: 48, height: 55, color: '#a08868', shape: 'nightstand' },
   { id: 'hemnes-bett', name: 'Holzbett 160cm', series: 'Bett', category: 'Schlafen', width: 174, depth: 212, height: 66, color: '#e8e2da', shape: 'bed' },
   { id: 'hemnes-nachttisch', name: 'Nachttisch breit', series: 'Nachttisch', category: 'Schlafen', width: 46, depth: 35, height: 70, color: '#7a6348', shape: 'nightstand' },
