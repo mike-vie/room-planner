@@ -62,7 +62,8 @@ export const useRoomStore = create<RoomStore>()(
         const { roomWidth, roomHeight } = get();
         const def = furnitureCatalog.find((f) => f.id === furnitureId);
         const newItem: PlacedFurniture = { id, furnitureId, x: roomWidth / 2, y: roomHeight / 2, rotation: 0 };
-        if (def?.shape === 'kitchen-wall-unit') newItem.elevation = 140;
+        if (def?.shape === 'kitchen-wall-unit' || def?.shape === 'wall-shelf') newItem.elevation = 140;
+        if (def?.shape === 'lcd-tv') newItem.elevation = 60;
         set((state) => ({
           furniture: [...state.furniture, newItem],
           selectedFurnitureId: id,

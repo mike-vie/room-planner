@@ -68,7 +68,7 @@ export default function PropertiesPanel() {
           />
           <span className="text-xs text-gray-400">{selected.color ?? def.color}</span>
         </div>
-        {(def.shape === 'mirror' || def.shape === 'kitchen-wall-unit') && (
+        {(def.shape === 'mirror' || def.shape === 'kitchen-wall-unit' || def.shape === 'wall-shelf' || def.shape === 'lcd-tv') && (
           <div className="flex items-center gap-2 text-sm">
             <label className="text-gray-600 w-12">Höhe:</label>
             <input

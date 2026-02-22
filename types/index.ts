@@ -63,11 +63,11 @@ export const DOOR_WIDTH = 90;
 export const DOOR_HEIGHT = 210;
 
 export type FurnitureShape =
-  | 'wardrobe' | 'shelf' | 'bed' | 'table' | 'sofa'
+  | 'wardrobe' | 'shelf' | 'bed' | 'table' | 'sofa' | 'corner-sofa'
   | 'chair' | 'desk' | 'dresser' | 'nightstand' | 'tv-unit'
   | 'gaming-desk' | 'gaming-chair'
-  | 'stove' | 'fridge' | 'kitchen-sink' | 'kitchen-unit' | 'kitchen-wall-unit'
-  | 'toilet' | 'bathtub' | 'bathtub-shower' | 'shower' | 'washbasin' | 'mirror';
+  | 'stove' | 'fridge' | 'kitchen-sink' | 'kitchen-unit' | 'kitchen-wall-unit' | 'wall-shelf'
+  | 'toilet' | 'bathtub' | 'bathtub-shower' | 'shower' | 'washbasin' | 'mirror' | 'lcd-tv';
 
 export interface FurnitureDef {
   id: string;

@@ -24,10 +24,12 @@ export const furnitureCatalog: FurnitureDef[] = [
   { id: 'hemnes-nachttisch', name: 'Nachttisch breit', series: 'Nachttisch', category: 'Schlafen', width: 46, depth: 35, height: 70, color: '#7a6348', shape: 'nightstand' },
 
   // Wohnen
+  { id: 'samsung-tv-85', name: 'LCD Fernseher 85"', series: 'Samsung', category: 'Wohnen', width: 188, depth: 8, height: 106, color: '#111111', shape: 'lcd-tv' },
   { id: 'lack-90', name: 'Couchtisch 90cm', series: 'Couchtisch', category: 'Wohnen', width: 90, depth: 55, height: 45, color: '#3a3a3a', shape: 'table' },
   { id: 'lack-55', name: 'Beistelltisch 55cm', series: 'Beistelltisch', category: 'Wohnen', width: 55, depth: 55, height: 45, color: '#e8e2da', shape: 'table' },
   { id: 'kivik-sofa', name: '3er-Sofa 228cm', series: 'Sofa', category: 'Wohnen', width: 228, depth: 95, height: 83, color: '#8c8c88', shape: 'sofa' },
   { id: 'kivik-2er', name: '2er-Sofa 190cm', series: 'Sofa', category: 'Wohnen', width: 190, depth: 95, height: 83, color: '#8c8c88', shape: 'sofa' },
+  { id: 'ecksofa-links', name: 'Ecksofa links 220cm', series: 'Sofa', category: 'Wohnen', width: 220, depth: 160, height: 83, color: '#8c8c88', shape: 'corner-sofa' },
   { id: 'ekedalen-tisch', name: 'Esstisch 120cm', series: 'Esstisch', category: 'Wohnen', width: 120, depth: 80, height: 75, color: '#6b5740', shape: 'table' },
   { id: 'ekedalen-stuhl', name: 'Essstuhl', series: 'Stuhl', category: 'Wohnen', width: 43, depth: 51, height: 95, color: '#6b5740', shape: 'chair' },
 
@@ -46,8 +48,10 @@ export const furnitureCatalog: FurnitureDef[] = [
   { id: 'havsen-spuele', name: 'Spüle 80cm', series: 'Küche', category: 'Küche', width: 80, depth: 60, height: 22, color: '#d0d0d0', shape: 'kitchen-sink' },
   { id: 'metod-zeile-120', name: 'Küchenzeile 120cm', series: 'Küche', category: 'Küche', width: 120, depth: 60, height: 85, color: '#e8e2da', shape: 'kitchen-unit' },
   { id: 'metod-zeile-60', name: 'Küchenzeile 60cm', series: 'Küche', category: 'Küche', width: 60, depth: 60, height: 85, color: '#e8e2da', shape: 'kitchen-unit' },
+  { id: 'metod-haenge-30', name: 'Hängeschrank 30cm', series: 'Küche', category: 'Küche', width: 30, depth: 37, height: 72, color: '#e8e2da', shape: 'kitchen-wall-unit' },
   { id: 'metod-haenge-50', name: 'Hängeschrank 50cm', series: 'Küche', category: 'Küche', width: 50, depth: 37, height: 72, color: '#e8e2da', shape: 'kitchen-wall-unit' },
   { id: 'metod-haenge-60', name: 'Hängeschrank 60cm', series: 'Küche', category: 'Küche', width: 60, depth: 37, height: 72, color: '#e8e2da', shape: 'kitchen-wall-unit' },
+  { id: 'metod-regal-30', name: 'Hängeregal 30cm', series: 'Küche', category: 'Küche', width: 30, depth: 25, height: 60, color: '#e8e2da', shape: 'wall-shelf' },
 
   // Bad
   { id: 'toftbo-wc', name: 'WC', series: 'Bad', category: 'Bad', width: 38, depth: 65, height: 40, color: '#f0f0f0', shape: 'toilet' },

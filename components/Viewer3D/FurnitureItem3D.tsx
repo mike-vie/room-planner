@@ -1059,6 +1059,51 @@ function KitchenWallUnitShape({ w, d, h, color, sel }: ShapeProps) {
   );
 }
 
+function WallShelfShape({ w, d, h, color, sel }: ShapeProps) {
+  const t = 0.016;
+  const shelfCount = Math.max(1, Math.round(h / 0.22) - 1);
+  const innerH = h - t * 2;
+  const spacing = innerH / (shelfCount + 1);
+  const mat = woodMat(color, sel);
+  const backMat = woodMat(darken(color, 10), sel);
+  return (
+    <group>
+      {/* Back panel */}
+      <mesh position={[0, h / 2, -d / 2 + 0.005]}>
+        <boxGeometry args={[w - t * 2, h - t * 2, 0.008]} />
+        <meshPhysicalMaterial {...backMat} />
+      </mesh>
+      {/* Left side */}
+      <mesh position={[-w / 2 + t / 2, h / 2, 0]} castShadow>
+        <boxGeometry args={[t, h, d]} />
+        <meshPhysicalMaterial {...mat} />
+      </mesh>
+      {/* Right side */}
+      <mesh position={[w / 2 - t / 2, h / 2, 0]} castShadow>
+        <boxGeometry args={[t, h, d]} />
+        <meshPhysicalMaterial {...mat} />
+      </mesh>
+      {/* Top */}
+      <mesh position={[0, h - t / 2, 0]} castShadow>
+        <boxGeometry args={[w, t, d]} />
+        <meshPhysicalMaterial {...mat} />
+      </mesh>
+      {/* Bottom */}
+      <mesh position={[0, t / 2, 0]}>
+        <boxGeometry args={[w, t, d]} />
+        <meshPhysicalMaterial {...mat} />
+      </mesh>
+      {/* Inner shelves */}
+      {Array.from({ length: shelfCount }).map((_, i) => (
+        <mesh key={i} position={[0, t + spacing * (i + 1), 0]}>
+          <boxGeometry args={[w - t * 2, t, d - 0.01]} />
+          <meshPhysicalMaterial {...mat} />
+        </mesh>
+      ))}
+    </group>
+  );
+}
+
 function BathtubShowerShape({ w, d, h, color, sel }: ShapeProps) {
   const chrome = metalMat('#c8c8c8', sel, true);
 
@@ -1538,6 +1583,79 @@ function MirrorShape({ w, d, h, color, sel }: ShapeProps) {
   );
 }
 
+function LcdTvShape({ w, d, h, color, sel }: ShapeProps) {
+  const bezel = 0.015;
+  return (
+    <group>
+      {/* Panel body */}
+      <mesh position={[0, h / 2, 0]} castShadow>
+        <boxGeometry args={[w, h, d]} />
+        <meshPhysicalMaterial color={sel ? '#60a5fa' : color} roughness={0.2} metalness={0.6} />
+      </mesh>
+      {/* Screen surface */}
+      <mesh position={[0, h / 2, d / 2 + 0.001]}>
+        <boxGeometry args={[w - bezel * 2, h - bezel * 2, 0.003]} />
+        <meshPhysicalMaterial
+          color={sel ? '#1a3050' : '#08080f'}
+          roughness={0.03}
+          metalness={0.1}
+          clearcoat={1.0}
+          clearcoatRoughness={0.02}
+        />
+      </mesh>
+    </group>
+  );
+}
+
+function CornerSofaShape({ w, d, h, color, sel }: ShapeProps) {
+  // Corner (Ecke) faces FRONT: chaise at front-left, main section at back.
+  // Inner corner Z = cFZ ≈ +0.18 m (front half) → clearly visible from front view.
+  const armW = 0.12;
+  const armH = h * 0.72;
+
+  const chaiseW = Math.min(w * 0.44, 1.00);
+  const mainD   = Math.min(d * 0.61, 1.00);
+  const chaiseD = d - mainD;
+
+  const lx = -w / 2, rx = w / 2;
+  const fz = d / 2,  bz = -d / 2;
+  const cFZ = fz - chaiseD;   // inner corner Z (near front) ✓
+
+  return (
+    <group>
+      {/* ── Main section (rear, full width) ── */}
+      <RoundedBox args={[w - armW * 2, h, mainD]} radius={0.05} smoothness={4}
+        position={[0, h / 2, bz + mainD / 2]} castShadow receiveShadow>
+        <meshPhysicalMaterial {...fabricMat(color, sel)} />
+      </RoundedBox>
+
+      {/* ── Chaise (front-left) ── */}
+      <RoundedBox args={[chaiseW - armW * 2, h, chaiseD]} radius={0.05} smoothness={4}
+        position={[lx + armW + (chaiseW - armW * 2) / 2, h / 2, cFZ + chaiseD / 2]} castShadow receiveShadow>
+        <meshPhysicalMaterial {...fabricMat(color, sel)} />
+      </RoundedBox>
+
+      {/* ── Left arm: full depth ── */}
+      <RoundedBox args={[armW, armH, d]} radius={0.03} smoothness={4}
+        position={[lx + armW / 2, armH / 2, 0]} castShadow receiveShadow>
+        <meshPhysicalMaterial {...fabricMat(darken(color, 14), sel)} />
+      </RoundedBox>
+
+      {/* ── Right arm: main section depth only ── */}
+      <RoundedBox args={[armW, armH, mainD]} radius={0.03} smoothness={4}
+        position={[rx - armW / 2, armH / 2, bz + mainD / 2]} castShadow receiveShadow>
+        <meshPhysicalMaterial {...fabricMat(darken(color, 14), sel)} />
+      </RoundedBox>
+
+      {/* ── Rear arm: across full width ── */}
+      <RoundedBox args={[w, armH, armW]} radius={0.03} smoothness={4}
+        position={[0, armH / 2, bz + armW / 2]} castShadow receiveShadow>
+        <meshPhysicalMaterial {...fabricMat(darken(color, 14), sel)} />
+      </RoundedBox>
+    </group>
+  );
+}
+
 function ShapeRenderer({ shape, series, ...props }: ShapeProps & { shape: FurnitureShape; series: string }) {
   switch (shape) {
     case 'wardrobe': return <WardrobeShape {...props} />;
@@ -1546,6 +1664,7 @@ function ShapeRenderer({ shape, series, ...props }: ShapeProps & { shape: Furnit
     case 'table': return <TableShape {...props} />;
     case 'desk': return <DeskShape {...props} />;
     case 'sofa': return <SofaShape {...props} />;
+    case 'corner-sofa': return <CornerSofaShape {...props} />;
     case 'chair': return <ChairShape {...props} />;
     case 'dresser': return <DresserShape {...props} />;
     case 'nightstand': return <NightstandShape {...props} />;
@@ -1557,12 +1676,14 @@ function ShapeRenderer({ shape, series, ...props }: ShapeProps & { shape: Furnit
     case 'kitchen-sink': return <KitchenSinkShape {...props} />;
     case 'kitchen-unit': return <KitchenUnitShape {...props} />;
     case 'kitchen-wall-unit': return <KitchenWallUnitShape {...props} />;
+    case 'wall-shelf': return <WallShelfShape {...props} />;
     case 'toilet': return <ToiletShape {...props} />;
     case 'bathtub': return <BathtubShape {...props} />;
     case 'bathtub-shower': return <BathtubShowerShape {...props} />;
     case 'shower': return <ShowerShape {...props} />;
     case 'washbasin': return <WashbasinShape {...props} />;
     case 'mirror': return <MirrorShape {...props} />;
+    case 'lcd-tv': return <LcdTvShape {...props} />;
   }
 }
 
