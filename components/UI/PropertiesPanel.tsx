@@ -68,6 +68,20 @@ export default function PropertiesPanel() {
           />
           <span className="text-xs text-gray-400">{selected.color ?? def.color}</span>
         </div>
+        {(def.shape === 'mirror' || def.shape === 'kitchen-wall-unit') && (
+          <div className="flex items-center gap-2 text-sm">
+            <label className="text-gray-600 w-12">Höhe:</label>
+            <input
+              type="number"
+              value={Math.round(selected.elevation ?? 0)}
+              onChange={(e) => updateFurniture(selected.id, { elevation: parseInt(e.target.value) || 0 })}
+              className="flex-1 px-1.5 py-0.5 border border-gray-300 rounded text-sm"
+              step={5}
+              min={0}
+            />
+            <span className="text-xs text-gray-400">cm</span>
+          </div>
+        )}
       </div>
       <p className="text-xs text-gray-400 mt-2">Doppelklick in 2D = 90° drehen</p>
     </div>

@@ -19,7 +19,7 @@ function checkWebGL(): boolean {
 }
 
 export default function Scene3D() {
-  const { roomWidth, roomHeight, furniture, selectedFurnitureId, selectFurniture, wallOpenings, hiddenWalls, toggleDoorOpen, interiorWalls } = useRoomStore();
+  const { roomWidth, roomHeight, furniture, selectedFurnitureId, selectFurniture, wallOpenings, hiddenWalls, toggleDoorOpen, interiorWalls, outerWallColors, interiorWallColor } = useRoomStore();
 
   const camDistance = Math.max(roomWidth, roomHeight) * 0.012;
 
@@ -82,7 +82,7 @@ export default function Scene3D() {
 
           <Environment preset="apartment" />
 
-          <Room3D roomWidth={roomWidth} roomHeight={roomHeight} interiorWalls={interiorWalls} wallOpenings={wallOpenings} hiddenWalls={hiddenWalls} onToggleDoor={toggleDoorOpen} />
+          <Room3D roomWidth={roomWidth} roomHeight={roomHeight} interiorWalls={interiorWalls} wallOpenings={wallOpenings} hiddenWalls={hiddenWalls} onToggleDoor={toggleDoorOpen} outerWallColors={outerWallColors} interiorWallColor={interiorWallColor} />
 
           {furniture.map((item) => {
             const def = furnitureCatalog.find((f) => f.id === item.furnitureId);
@@ -99,6 +99,7 @@ export default function Scene3D() {
                 roomHeight={roomHeight}
                 isSelected={selectedFurnitureId === item.id}
                 colorOverride={item.color}
+                elevation={item.elevation}
               />
             );
           })}
@@ -110,6 +111,19 @@ export default function Scene3D() {
             blur={2}
             far={5}
           />
+
+          {/* Ceiling fill light */}
+          <pointLight
+            position={[0, 2.3, 0]}
+            intensity={0.8}
+            color="#fff8e8"
+            distance={8}
+            decay={2}
+            castShadow
+            shadow-mapSize-width={512}
+            shadow-mapSize-height={512}
+          />
+
         </Suspense>
 
         <OrbitControls

@@ -243,7 +243,7 @@ export function createWallNormalMap(width = 512, height = 512): THREE.CanvasText
 // Grayscale grain pattern around white — tinted by material.color at render time.
 // This way color changes are instant without regenerating textures.
 
-export function createWoodGrainTexture(width = 256, height = 256, seed = 0): THREE.CanvasTexture {
+export function createWoodGrainTexture(width = 512, height = 512, seed = 0): THREE.CanvasTexture {
   const canvas = document.createElement('canvas');
   canvas.width = width;
   canvas.height = height;
@@ -276,7 +276,7 @@ export function createWoodGrainTexture(width = 256, height = 256, seed = 0): THR
   return tex;
 }
 
-export function createWoodNormalMap(width = 256, height = 256, seed = 0): THREE.CanvasTexture {
+export function createWoodNormalMap(width = 512, height = 512, seed = 0): THREE.CanvasTexture {
   const canvas = document.createElement('canvas');
   canvas.width = width;
   canvas.height = height;
@@ -345,6 +345,73 @@ export function createFabricNormalMap(width = 256, height = 256): THREE.CanvasTe
       const nx = 128 + crossHatch * 30;
       const ny = 128 + crossHatch * 30;
       ctx.fillStyle = `rgb(${nx | 0},${ny | 0},248)`;
+      ctx.fillRect(x, y, 1, 1);
+    }
+  }
+
+  const tex = new THREE.CanvasTexture(canvas);
+  tex.wrapS = THREE.RepeatWrapping;
+  tex.wrapT = THREE.RepeatWrapping;
+  return tex;
+}
+
+// --- Wood Roughness Map ---
+// fBm variation: base 0.70, knots brighter (rougher), grain lines darker (smoother)
+
+export function createWoodRoughnessMap(width = 512, height = 512): THREE.CanvasTexture {
+  const canvas = document.createElement('canvas');
+  canvas.width = width;
+  canvas.height = height;
+  const ctx = canvas.getContext('2d')!;
+
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      const nx = x / width;
+      const ny = y / height;
+
+      // Base roughness ~0.70 (value ~179)
+      const base = 179;
+      // Grain lines (elongated along X) are smoother → darker
+      const grain = fbm(nx * 2, ny * 25, 77, 4);
+      // Knot-like variations are rougher → brighter
+      const knot = fbm(nx * 6, ny * 6, 123, 3);
+
+      const variation = (grain - 0.5) * (-40) + (knot - 0.5) * 30;
+      const v = Math.min(255, Math.max(80, base + variation));
+
+      ctx.fillStyle = `rgb(${v | 0},${v | 0},${v | 0})`;
+      ctx.fillRect(x, y, 1, 1);
+    }
+  }
+
+  const tex = new THREE.CanvasTexture(canvas);
+  tex.wrapS = THREE.RepeatWrapping;
+  tex.wrapT = THREE.RepeatWrapping;
+  return tex;
+}
+
+// --- Fabric Roughness Map ---
+// Weave pattern: warp threads slightly smoother than weft threads
+
+export function createFabricRoughnessMap(width = 256, height = 256): THREE.CanvasTexture {
+  const canvas = document.createElement('canvas');
+  canvas.width = width;
+  canvas.height = height;
+  const ctx = canvas.getContext('2d')!;
+
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      // Base roughness ~0.88 (value ~224)
+      const base = 224;
+      // Warp (x-aligned) vs weft (y-aligned) threads
+      const isWarp = ((x + y) % 4 < 2);
+      const warpSmooth = isWarp ? -12 : 12; // warp smoother, weft rougher
+      const threadSin = Math.sin((isWarp ? x : y) * 0.8) * 8;
+      const n = fbm(x / width * 15, y / height * 15, 555, 2);
+      const variation = warpSmooth + threadSin + (n - 0.5) * 10;
+      const v = Math.min(255, Math.max(160, base + variation));
+
+      ctx.fillStyle = `rgb(${v | 0},${v | 0},${v | 0})`;
       ctx.fillRect(x, y, 1, 1);
     }
   }

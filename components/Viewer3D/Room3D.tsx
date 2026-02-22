@@ -24,6 +24,8 @@ interface Room3DProps {
   wallOpenings?: WallOpening[];
   hiddenWalls?: WallSide[];
   onToggleDoor?: (id: string) => void;
+  outerWallColors?: Partial<Record<WallSide, string>>;
+  interiorWallColor?: string;
 }
 
 // --- Rectangle mode helpers (unchanged) ---
@@ -32,19 +34,19 @@ interface WallSegmentBox {
   position: [number, number, number];
   size: [number, number, number];
   color: string;
+  isWallPiece?: boolean;
   transparent?: boolean;
   opacity?: number;
 }
 
 function buildWallWithOpenings(
   wallSide: WallSide, openings: WallOpening[], roomW: number, roomD: number,
-  wallH: number, wallT: number, hiddenWalls: Set<WallSide>
+  wallH: number, wallT: number, hiddenWalls: Set<WallSide>, wallColor: string
 ): WallSegmentBox[] {
   const segments: WallSegmentBox[] = [];
   const isHorizontal = wallSide === 'top' || wallSide === 'bottom';
   const wallLength = isHorizontal ? roomW : roomD;
   const isHidden = hiddenWalls.has(wallSide);
-  const wallColor = isHorizontal ? '#f2efe9' : '#edeae4';
 
   const sorted = [...openings].sort((a, b) => a.position - b.position);
 
@@ -64,7 +66,7 @@ function buildWallWithOpenings(
     const size = wallSize(isHorizontal ? roomW + wallT * 2 : roomD, wallH);
     const pos: [number, number, number] = [...wallPos] as [number, number, number];
     pos[1] = wallH / 2;
-    segments.push({ position: pos, size, color: wallColor });
+    segments.push({ position: pos, size, color: wallColor, isWallPiece: true });
     return segments;
   }
 
@@ -82,18 +84,18 @@ function buildWallWithOpenings(
       if (leftLen > 0.001) {
         const pos: [number, number, number] = [...wallPos] as [number, number, number];
         pos[1] = wallH / 2; pos[lengthAxis] = wallPos[lengthAxis] + cursor + leftLen / 2;
-        segments.push({ position: pos, size: wallSize(leftLen, wallH), color: wallColor });
+        segments.push({ position: pos, size: wallSize(leftLen, wallH), color: wallColor, isWallPiece: true });
       }
       const lintelH = wallH - sillH - oh;
       if (lintelH > 0.001) {
         const pos: [number, number, number] = [...wallPos] as [number, number, number];
         pos[1] = sillH + oh + lintelH / 2; pos[lengthAxis] = wallPos[lengthAxis] + openCenter;
-        segments.push({ position: pos, size: wallSize(ow, lintelH), color: wallColor });
+        segments.push({ position: pos, size: wallSize(ow, lintelH), color: wallColor, isWallPiece: true });
       }
       if (sillH > 0.001) {
         const pos: [number, number, number] = [...wallPos] as [number, number, number];
         pos[1] = sillH / 2; pos[lengthAxis] = wallPos[lengthAxis] + openCenter;
-        segments.push({ position: pos, size: wallSize(ow, sillH), color: wallColor });
+        segments.push({ position: pos, size: wallSize(ow, sillH), color: wallColor, isWallPiece: true });
       }
     }
 
@@ -133,7 +135,7 @@ function buildWallWithOpenings(
     if (rightLen > 0.001) {
       const pos: [number, number, number] = [...wallPos] as [number, number, number];
       pos[1] = wallH / 2; pos[lengthAxis] = wallPos[lengthAxis] + cursor + rightLen / 2;
-      segments.push({ position: pos, size: wallSize(rightLen, wallH), color: wallColor });
+      segments.push({ position: pos, size: wallSize(rightLen, wallH), color: wallColor, isWallPiece: true });
     }
   }
   return segments;
@@ -269,6 +271,7 @@ function LocalDoor3D({ opening, lengthM, onToggle }: { opening: WallOpening; len
 export default function Room3D({
   roomWidth, roomHeight, interiorWalls = [], wallOpenings = [],
   hiddenWalls: hiddenWallsProp = ['bottom', 'right'], onToggleDoor,
+  outerWallColors = {}, interiorWallColor = WALL_COLOR,
 }: Room3DProps) {
   const w = roomWidth * SCALE;
   const d = roomHeight * SCALE;
@@ -279,8 +282,8 @@ export default function Room3D({
   const floorTex      = useMemo(() => { const tx = createFloorTexture();      tx.repeat.set(w / 2, d / 2); return tx; }, [w, d]);
   const floorNormal   = useMemo(() => { const tx = createFloorNormalMap();     tx.repeat.set(w / 2, d / 2); return tx; }, [w, d]);
   const floorRoughness= useMemo(() => { const tx = createFloorRoughnessMap();  tx.repeat.set(w / 2, d / 2); return tx; }, [w, d]);
-  const wallTexBack   = useMemo(() => { const tx = createWallTexture('#f2efe9'); tx.repeat.set(w, h); return tx; }, [w, h]);
-  const wallTexSide   = useMemo(() => { const tx = createWallTexture('#edeae4'); tx.repeat.set(d, h); return tx; }, [d, h]);
+  const wallTexBack   = useMemo(() => { const tx = createWallTexture('#ffffff'); tx.repeat.set(w, h); return tx; }, [w, h]);
+  const wallTexSide   = useMemo(() => { const tx = createWallTexture('#ffffff'); tx.repeat.set(d, h); return tx; }, [d, h]);
   const wallNormal    = useMemo(() => { const tx = createWallNormalMap();       tx.repeat.set(3, 3); return tx; }, []);
 
   const hiddenWalls = new Set<WallSide>(hiddenWallsProp);
@@ -292,7 +295,8 @@ export default function Room3D({
   };
   const allSegments: WallSegmentBox[] = [];
   for (const side of ['top', 'bottom', 'left', 'right'] as WallSide[]) {
-    allSegments.push(...buildWallWithOpenings(side, openingsByWall[side], w, d, h, t, hiddenWalls));
+    const wc = outerWallColors[side] ?? WALL_COLOR;
+    allSegments.push(...buildWallWithOpenings(side, openingsByWall[side], w, d, h, t, hiddenWalls, wc));
   }
 
   return (
@@ -306,19 +310,19 @@ export default function Room3D({
       {/* Walls */}
       {allSegments.map((seg, i) => {
         const isGlass = seg.transparent && seg.color === '#a8d8ea';
-        const isWall  = !seg.transparent && seg.color !== '#ffffff';
-        const isHorizWall = isWall && Math.abs(seg.size[2]) < 0.15;
+        const isWallPiece = seg.isWallPiece ?? false;
+        const isHorizWall = isWallPiece && Math.abs(seg.size[2]) < 0.15;
         return (
           <mesh key={i} position={seg.position} receiveShadow={!seg.transparent}>
             <boxGeometry args={seg.size} />
             <meshStandardMaterial
-              map={isWall ? (isHorizWall ? wallTexBack : wallTexSide) : undefined}
-              normalMap={isWall ? wallNormal : undefined}
-              normalScale={isWall ? new THREE.Vector2(0.15, 0.15) : undefined}
-              color={isWall ? '#ffffff' : seg.color}
+              map={isWallPiece ? (isHorizWall ? wallTexBack : wallTexSide) : undefined}
+              normalMap={isWallPiece ? wallNormal : undefined}
+              normalScale={isWallPiece ? new THREE.Vector2(0.15, 0.15) : undefined}
+              color={isGlass ? '#c8e8ff' : seg.color}
               roughness={isGlass ? 0.05 : seg.color === '#ffffff' ? 0.4 : 0.92}
-              metalness={isGlass ? 0.1 : 0}
-              transparent={seg.transparent} opacity={seg.opacity ?? 1}
+              metalness={isGlass ? 0.08 : 0}
+              transparent={seg.transparent} opacity={isGlass ? 0.25 : (seg.opacity ?? 1)}
             />
           </mesh>
         );
@@ -352,18 +356,23 @@ export default function Room3D({
         const pieces = buildLocalWallPieces(lengthM, iwOpenings, h, t);
         return (
           <group key={iw.id} position={[midX, 0, midZ]} rotation={[0, rotY, 0]}>
-            {pieces.map((piece, pi) => (
-              <mesh key={pi} position={[piece.x, piece.y, 0]} castShadow={!piece.transparent} receiveShadow={!piece.transparent}>
-                <boxGeometry args={[piece.w, piece.h, piece.transparent ? 0.01 : t]} />
-                <meshStandardMaterial
-                  color={piece.color}
-                  roughness={piece.transparent ? 0.05 : piece.color === '#ffffff' ? 0.4 : 0.9}
-                  metalness={piece.transparent ? 0.1 : 0}
-                  transparent={piece.transparent}
-                  opacity={piece.opacity ?? 1}
-                />
-              </mesh>
-            ))}
+            {pieces.map((piece, pi) => {
+              const isPieceGlass = piece.transparent && piece.color === '#a8d8ea';
+              return (
+                <mesh key={pi} position={[piece.x, piece.y, 0]} castShadow={!piece.transparent} receiveShadow={!piece.transparent}>
+                  <boxGeometry args={[piece.w, piece.h, piece.transparent ? 0.01 : t]} />
+                  {
+                    <meshStandardMaterial
+                      color={isPieceGlass ? '#c8e8ff' : (!piece.transparent && piece.color !== '#ffffff') ? interiorWallColor : piece.color}
+                      roughness={isPieceGlass ? 0.05 : piece.color === '#ffffff' ? 0.4 : 0.9}
+                      metalness={isPieceGlass ? 0.08 : 0}
+                      transparent={piece.transparent}
+                      opacity={isPieceGlass ? 0.25 : (piece.opacity ?? 1)}
+                    />
+                  }
+                </mesh>
+              );
+            })}
             {iwOpenings.filter(o => o.type === 'door').map(o => (
               <LocalDoor3D key={o.id} opening={o} lengthM={lengthM} onToggle={() => onToggleDoor?.(o.id)} />
             ))}

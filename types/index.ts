@@ -29,6 +29,7 @@ export interface PlacedFurniture {
   y: number;
   rotation: number;
   color?: string;
+  elevation?: number; // cm above floor (for wall-mounted items like mirrors)
 }
 
 export type WallSide = 'top' | 'right' | 'bottom' | 'left';
@@ -65,8 +66,8 @@ export type FurnitureShape =
   | 'wardrobe' | 'shelf' | 'bed' | 'table' | 'sofa'
   | 'chair' | 'desk' | 'dresser' | 'nightstand' | 'tv-unit'
   | 'gaming-desk' | 'gaming-chair'
-  | 'stove' | 'fridge' | 'kitchen-sink' | 'kitchen-unit'
-  | 'toilet' | 'bathtub' | 'shower' | 'washbasin' | 'mirror';
+  | 'stove' | 'fridge' | 'kitchen-sink' | 'kitchen-unit' | 'kitchen-wall-unit'
+  | 'toilet' | 'bathtub' | 'bathtub-shower' | 'shower' | 'washbasin' | 'mirror';
 
 export interface FurnitureDef {
   id: string;

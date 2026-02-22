@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { PlacedFurniture, WallOpening, WallOpeningType, WallSide, InteriorWall } from '@/types';
+import { furnitureCatalog } from '@/data/furniture-catalog';
 
 type PlacementMode = 'none' | 'window' | 'window-tall' | 'balcony-door' | 'door';
 
@@ -15,6 +16,8 @@ interface RoomStore {
   interiorWalls: InteriorWall[];
   drawingInteriorWall: boolean;       // transient (not persisted)
   selectedInteriorWallId: string | null; // transient
+  outerWallColors: Record<WallSide, string>;
+  interiorWallColor: string;
 
   setRoomSize: (width: number, height: number) => void;
   addFurniture: (furnitureId: string) => void;
@@ -32,6 +35,8 @@ interface RoomStore {
   removeInteriorWall: (id: string) => void;
   setDrawingInteriorWall: (active: boolean) => void;
   selectInteriorWall: (id: string | null) => void;
+  setOuterWallColor: (wall: WallSide, color: string) => void;
+  setInteriorWallColor: (color: string) => void;
 }
 
 export const useRoomStore = create<RoomStore>()(
@@ -47,17 +52,19 @@ export const useRoomStore = create<RoomStore>()(
       interiorWalls: [],
       drawingInteriorWall: false,
       selectedInteriorWallId: null,
+      outerWallColors: { top: '#f2efe9', bottom: '#f2efe9', left: '#f2efe9', right: '#f2efe9' },
+      interiorWallColor: '#f2efe9',
 
       setRoomSize: (width, height) => set({ roomWidth: width, roomHeight: height }),
 
       addFurniture: (furnitureId) => {
         const id = `placed-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
         const { roomWidth, roomHeight } = get();
+        const def = furnitureCatalog.find((f) => f.id === furnitureId);
+        const newItem: PlacedFurniture = { id, furnitureId, x: roomWidth / 2, y: roomHeight / 2, rotation: 0 };
+        if (def?.shape === 'kitchen-wall-unit') newItem.elevation = 140;
         set((state) => ({
-          furniture: [
-            ...state.furniture,
-            { id, furnitureId, x: roomWidth / 2, y: roomHeight / 2, rotation: 0 },
-          ],
+          furniture: [...state.furniture, newItem],
           selectedFurnitureId: id,
           selectedInteriorWallId: null,
         }));
@@ -134,6 +141,10 @@ export const useRoomStore = create<RoomStore>()(
       setDrawingInteriorWall: (active) => set({ drawingInteriorWall: active }),
 
       selectInteriorWall: (id) => set({ selectedInteriorWallId: id }),
+
+      setOuterWallColor: (wall, color) =>
+        set((state) => ({ outerWallColors: { ...state.outerWallColors, [wall]: color } })),
+      setInteriorWallColor: (color) => set({ interiorWallColor: color }),
     }),
     {
       name: 'room-planner-storage',
@@ -144,6 +155,8 @@ export const useRoomStore = create<RoomStore>()(
         wallOpenings: state.wallOpenings,
         hiddenWalls: state.hiddenWalls,
         interiorWalls: state.interiorWalls,
+        outerWallColors: state.outerWallColors,
+        interiorWallColor: state.interiorWallColor,
       }),
     }
   )

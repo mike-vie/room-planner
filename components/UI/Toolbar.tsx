@@ -14,6 +14,7 @@ export default function Toolbar({ is3DFullscreen, onToggle3DFullscreen }: Toolba
     placementMode, setPlacementMode, hiddenWalls, toggleWall,
     drawingInteriorWall, setDrawingInteriorWall,
     interiorWalls, selectedInteriorWallId, selectInteriorWall, removeInteriorWall,
+    outerWallColors, interiorWallColor, setOuterWallColor, setInteriorWallColor,
   } = useRoomStore();
   const [width, setWidth] = useState(roomWidth.toString());
   const [height, setHeight] = useState(roomHeight.toString());
@@ -120,7 +121,7 @@ export default function Toolbar({ is3DFullscreen, onToggle3DFullscreen }: Toolba
 
           <div className="h-4 w-px bg-gray-300" />
 
-          {/* Outer wall visibility */}
+          {/* Outer wall visibility + per-wall color */}
           {([
             ['top', 'Hinten'],
             ['left', 'Links'],
@@ -129,20 +130,42 @@ export default function Toolbar({ is3DFullscreen, onToggle3DFullscreen }: Toolba
           ] as const).map(([side, label]) => {
             const isHidden = hiddenWalls.includes(side);
             return (
-              <button
-                key={side}
-                onClick={() => toggleWall(side)}
-                className={`px-2 py-0.5 rounded text-sm transition-colors ${
-                  isHidden ? 'bg-gray-100 text-gray-400 hover:bg-gray-200' : 'bg-gray-700 text-white hover:bg-gray-800'
-                }`}
-                title={isHidden ? `${label} Wand einblenden` : `${label} Wand ausblenden`}
-              >
-                {label}
-              </button>
+              <div key={side} className="flex items-center gap-0.5">
+                <button
+                  onClick={() => toggleWall(side)}
+                  className={`px-2 py-0.5 rounded-l text-sm transition-colors ${
+                    isHidden ? 'bg-gray-100 text-gray-400 hover:bg-gray-200' : 'bg-gray-700 text-white hover:bg-gray-800'
+                  }`}
+                  title={isHidden ? `${label} Wand einblenden` : `${label} Wand ausblenden`}
+                >
+                  {label}
+                </button>
+                <input
+                  type="color"
+                  value={outerWallColors[side] ?? '#f2efe9'}
+                  onChange={(e) => setOuterWallColor(side, e.target.value)}
+                  className="w-6 h-[1.375rem] rounded-r border border-l-0 border-gray-300 cursor-pointer p-0"
+                  title={`${label} Wandfarbe`}
+                />
+              </div>
             );
           })}
         </>
       )}
+
+      <div className="h-4 w-px bg-gray-300" />
+
+      {/* Interior wall color */}
+      <div className="flex items-center gap-1.5">
+        <span className="text-gray-600 text-xs">Innenwand:</span>
+        <input
+          type="color"
+          value={interiorWallColor}
+          onChange={(e) => setInteriorWallColor(e.target.value)}
+          className="w-6 h-6 border border-gray-300 rounded cursor-pointer p-0"
+          title="Innenwand Farbe"
+        />
+      </div>
 
       <div className="h-4 w-px bg-gray-300" />
       <span className="text-xs text-gray-500">{furniture.length} Möbel</span>

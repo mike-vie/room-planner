@@ -4,6 +4,8 @@ export const furnitureCatalog: FurnitureDef[] = [
   // Aufbewahrung
   { id: 'pax-100', name: 'Kleiderschrank 100cm', series: 'Schrank', category: 'Aufbewahrung', width: 100, depth: 58, height: 201, color: '#b8a088', shape: 'wardrobe' },
   { id: 'pax-150', name: 'Kleiderschrank 150cm', series: 'Schrank', category: 'Aufbewahrung', width: 150, depth: 58, height: 201, color: '#f0ebe4', shape: 'wardrobe' },
+  { id: 'pax-100-231', name: 'Kleiderschrank 100cm (231)', series: 'Schrank', category: 'Aufbewahrung', width: 100, depth: 58, height: 231, color: '#b8a088', shape: 'wardrobe' },
+  { id: 'pax-150-231', name: 'Kleiderschrank 150cm (231)', series: 'Schrank', category: 'Aufbewahrung', width: 150, depth: 58, height: 231, color: '#f0ebe4', shape: 'wardrobe' },
   { id: 'kallax-2x2', name: 'Würfelregal 2×2', series: 'Regal', category: 'Aufbewahrung', width: 77, depth: 39, height: 77, color: '#f0ebe4', shape: 'shelf' },
   { id: 'kallax-2x4', name: 'Würfelregal 2×4', series: 'Regal', category: 'Aufbewahrung', width: 77, depth: 39, height: 147, color: '#f0ebe4', shape: 'shelf' },
   { id: 'billy-80', name: 'Bücherregal 80cm', series: 'Regal', category: 'Aufbewahrung', width: 80, depth: 28, height: 202, color: '#e8e2da', shape: 'shelf' },
@@ -44,10 +46,13 @@ export const furnitureCatalog: FurnitureDef[] = [
   { id: 'havsen-spuele', name: 'Spüle 80cm', series: 'Küche', category: 'Küche', width: 80, depth: 60, height: 22, color: '#d0d0d0', shape: 'kitchen-sink' },
   { id: 'metod-zeile-120', name: 'Küchenzeile 120cm', series: 'Küche', category: 'Küche', width: 120, depth: 60, height: 85, color: '#e8e2da', shape: 'kitchen-unit' },
   { id: 'metod-zeile-60', name: 'Küchenzeile 60cm', series: 'Küche', category: 'Küche', width: 60, depth: 60, height: 85, color: '#e8e2da', shape: 'kitchen-unit' },
+  { id: 'metod-haenge-50', name: 'Hängeschrank 50cm', series: 'Küche', category: 'Küche', width: 50, depth: 37, height: 72, color: '#e8e2da', shape: 'kitchen-wall-unit' },
+  { id: 'metod-haenge-60', name: 'Hängeschrank 60cm', series: 'Küche', category: 'Küche', width: 60, depth: 37, height: 72, color: '#e8e2da', shape: 'kitchen-wall-unit' },
 
   // Bad
   { id: 'toftbo-wc', name: 'WC', series: 'Bad', category: 'Bad', width: 38, depth: 65, height: 40, color: '#f0f0f0', shape: 'toilet' },
   { id: 'badaren-wanne', name: 'Badewanne 170cm', series: 'Bad', category: 'Bad', width: 75, depth: 170, height: 58, color: '#f5f5f5', shape: 'bathtub' },
+  { id: 'kombi-badewanne-dusche', name: 'Badewanne mit Dusche', series: 'Bad', category: 'Bad', width: 75, depth: 170, height: 58, color: '#f5f5f5', shape: 'bathtub-shower' },
   { id: 'lillangen-dusche', name: 'Dusche 90×90', series: 'Bad', category: 'Bad', width: 90, depth: 90, height: 5, color: '#e8e8e8', shape: 'shower' },
   { id: 'odensvik-waschbecken', name: 'Waschbecken 63cm', series: 'Bad', category: 'Bad', width: 63, depth: 49, height: 15, color: '#f0f0f0', shape: 'washbasin' },
   { id: 'lettan-spiegel', name: 'Badezimmerspiegel', series: 'Bad', category: 'Bad', width: 65, depth: 3, height: 100, color: '#c8d8e8', shape: 'mirror' },
