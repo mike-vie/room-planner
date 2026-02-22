@@ -49,6 +49,7 @@ export const furnitureCatalog: FurnitureDef[] = [
   { id: 'havsen-spuele', name: 'Spüle 80cm', series: 'Küche', category: 'Küche', width: 80, depth: 60, height: 22, color: '#d0d0d0', shape: 'kitchen-sink' },
   { id: 'metod-zeile-120', name: 'Küchenzeile 120cm', series: 'Küche', category: 'Küche', width: 120, depth: 60, height: 85, color: '#e8e2da', shape: 'kitchen-unit' },
   { id: 'metod-zeile-60', name: 'Küchenzeile 60cm', series: 'Küche', category: 'Küche', width: 60, depth: 60, height: 85, color: '#e8e2da', shape: 'kitchen-unit' },
+  { id: 'metod-zeile-30', name: 'Küchenzeile 30cm', series: 'Küche', category: 'Küche', width: 30, depth: 60, height: 85, color: '#e8e2da', shape: 'kitchen-unit' },
   { id: 'metod-haenge-30', name: 'Hängeschrank 30cm', series: 'Küche', category: 'Küche', width: 30, depth: 37, height: 72, color: '#e8e2da', shape: 'kitchen-wall-unit' },
   { id: 'metod-haenge-50', name: 'Hängeschrank 50cm', series: 'Küche', category: 'Küche', width: 50, depth: 37, height: 72, color: '#e8e2da', shape: 'kitchen-wall-unit' },
   { id: 'metod-haenge-60', name: 'Hängeschrank 60cm', series: 'Küche', category: 'Küche', width: 60, depth: 37, height: 72, color: '#e8e2da', shape: 'kitchen-wall-unit' },
