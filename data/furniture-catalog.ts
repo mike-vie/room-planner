@@ -6,6 +6,7 @@ export const furnitureCatalog: FurnitureDef[] = [
   { id: 'pax-150', name: 'Kleiderschrank 150cm', series: 'Schrank', category: 'Aufbewahrung', width: 150, depth: 58, height: 201, color: '#f0ebe4', shape: 'wardrobe' },
   { id: 'pax-100-231', name: 'Kleiderschrank 100cm (231)', series: 'Schrank', category: 'Aufbewahrung', width: 100, depth: 58, height: 231, color: '#b8a088', shape: 'wardrobe' },
   { id: 'pax-150-231', name: 'Kleiderschrank 150cm (231)', series: 'Schrank', category: 'Aufbewahrung', width: 150, depth: 58, height: 231, color: '#f0ebe4', shape: 'wardrobe' },
+  { id: 'haenge-regal-60', name: 'Hängeregal 60cm', series: 'Regal', category: 'Aufbewahrung', width: 60, depth: 37, height: 72, color: '#e8e2da', shape: 'wall-shelf' },
   { id: 'kallax-2x2', name: 'Würfelregal 2×2', series: 'Regal', category: 'Aufbewahrung', width: 77, depth: 39, height: 77, color: '#f0ebe4', shape: 'shelf' },
   { id: 'kallax-2x4', name: 'Würfelregal 2×4', series: 'Regal', category: 'Aufbewahrung', width: 77, depth: 39, height: 147, color: '#f0ebe4', shape: 'shelf' },
   { id: 'billy-80', name: 'Bücherregal 80cm', series: 'Regal', category: 'Aufbewahrung', width: 80, depth: 28, height: 202, color: '#e8e2da', shape: 'shelf' },

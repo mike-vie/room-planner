@@ -1608,49 +1608,128 @@ function LcdTvShape({ w, d, h, color, sel }: ShapeProps) {
 }
 
 function CornerSofaShape({ w, d, h, color, sel }: ShapeProps) {
-  // Corner (Ecke) faces FRONT: chaise at front-left, main section at back.
-  // Inner corner Z = cFZ ≈ +0.18 m (front half) → clearly visible from front view.
-  const armW = 0.12;
-  const armH = h * 0.72;
+  // Ecksofa Links: person sits facing +Z (back to -Z wall), Ottomane on their LEFT (-X).
+  // Layout: Ottomane = left column (lx → cRX), full depth d.
+  //         Main 3-seat = right section (cRX → rx), depth mainD (~90 cm).
+  // Inner corner (Ecke) at (cRX, cFZ) with cFZ = bz + mainD ≈ +0.10 m → visible ✓
 
-  const chaiseW = Math.min(w * 0.44, 1.00);
-  const mainD   = Math.min(d * 0.61, 1.00);
-  const chaiseD = d - mainD;
+  const ottomaneW = w * 0.40;          // ottomane X-width  (~88 cm for 220)
+  const mainW     = w - ottomaneW;     // main section X-width (~132 cm, 3 persons)
+  const mainD     = Math.min(d * 0.575, 0.92); // seat depth ~90 cm
+
+  const armW   = 0.11;
+  const backT  = 0.11;
+  const seatH  = h * 0.46;
+  const backH  = h - seatH;
+  const armH   = h * 0.72;
+  const legH   = 0.06;
+  const legW   = 0.04;
+  const cushH  = 0.10;
+  const bCushT = 0.12;
+  const bCushH = backH * 0.86;
+  const g      = 0.025;
 
   const lx = -w / 2, rx = w / 2;
   const fz = d / 2,  bz = -d / 2;
-  const cFZ = fz - chaiseD;   // inner corner Z (near front) ✓
+  const cRX = lx + ottomaneW;  // inner corner X
+  const cFZ = bz + mainD;      // inner corner Z (≈ +0.10, front half ✓)
+
+  // Main section seat geometry
+  const mainInnerW = mainW - armW * 2;
+  const mainSeatD  = mainD - backT - g;
+  const segW       = (mainInnerW - g * 2) / 3;   // width of each of the 3 seat segments
+
+  // Ottomane seat geometry
+  const ottInnerW  = ottomaneW - armW - backT;   // between left arm and inner backrest
+  const ottCushD   = (d - g) / 2;                // each ottomane back cushion depth (×2)
+
+  const platH = legH + seatH;  // Y of top of seat platform
 
   return (
     <group>
-      {/* ── Main section (rear, full width) ── */}
-      <RoundedBox args={[w - armW * 2, h, mainD]} radius={0.05} smoothness={4}
-        position={[0, h / 2, bz + mainD / 2]} castShadow receiveShadow>
+      {/* ─── Legs: modern square, dark (8 total) ─── */}
+      {([
+        [cRX + 0.10, bz + 0.10], [rx  - 0.10, bz + 0.10],
+        [cRX + 0.10, cFZ - 0.10],[rx  - 0.10, cFZ - 0.10],
+        [lx  + 0.10, bz + 0.10], [cRX - 0.10, bz + 0.10],
+        [lx  + 0.10, fz  - 0.10],[cRX - 0.10, fz  - 0.10],
+      ] as [number, number][]).map(([x, z], i) => (
+        <mesh key={`lg${i}`} position={[x, legH / 2, z]} castShadow>
+          <boxGeometry args={[legW, legH, legW]} />
+          <meshStandardMaterial color={sel ? '#60a5fa' : '#1a1a1a'} roughness={0.2} metalness={0.4} />
+        </mesh>
+      ))}
+
+      {/* ─── Seat platforms (darker upholstered base) ─── */}
+      {/* Main section */}
+      <RoundedBox args={[mainW, seatH, mainD]} radius={0.03} smoothness={4}
+        position={[cRX + mainW / 2, legH + seatH / 2, bz + mainD / 2]} castShadow receiveShadow>
+        <meshPhysicalMaterial {...fabricMat(darken(color, 16), sel)} />
+      </RoundedBox>
+      {/* Ottomane */}
+      <RoundedBox args={[ottomaneW, seatH, d]} radius={0.03} smoothness={4}
+        position={[lx + ottomaneW / 2, legH + seatH / 2, 0]} castShadow receiveShadow>
+        <meshPhysicalMaterial {...fabricMat(darken(color, 16), sel)} />
+      </RoundedBox>
+
+      {/* ─── 3 seat cushion segments (main) ─── */}
+      {[0, 1, 2].map(i => (
+        <RoundedBox key={`sc${i}`}
+          args={[segW, cushH, mainSeatD]} radius={0.04} smoothness={4}
+          position={[cRX + armW + segW / 2 + i * (segW + g), platH + cushH / 2, bz + backT + g + mainSeatD / 2]}
+          castShadow>
+          <meshPhysicalMaterial {...fabricMat(color, sel)} />
+        </RoundedBox>
+      ))}
+
+      {/* ─── Ottomane seat surface ─── */}
+      <RoundedBox args={[ottInnerW, cushH, d]} radius={0.04} smoothness={4}
+        position={[lx + armW + ottInnerW / 2, platH + cushH / 2, 0]} castShadow>
         <meshPhysicalMaterial {...fabricMat(color, sel)} />
       </RoundedBox>
 
-      {/* ── Chaise (front-left) ── */}
-      <RoundedBox args={[chaiseW - armW * 2, h, chaiseD]} radius={0.05} smoothness={4}
-        position={[lx + armW + (chaiseW - armW * 2) / 2, h / 2, cFZ + chaiseD / 2]} castShadow receiveShadow>
-        <meshPhysicalMaterial {...fabricMat(color, sel)} />
+      {/* ─── Main backrest frame (against wall, Z = bz) ─── */}
+      <RoundedBox args={[mainW, backH, backT]} radius={0.025} smoothness={4}
+        position={[cRX + mainW / 2, legH + seatH + backH / 2, bz + backT / 2]} castShadow receiveShadow>
+        <meshPhysicalMaterial {...fabricMat(darken(color, 10), sel)} />
       </RoundedBox>
 
-      {/* ── Left arm: full depth ── */}
-      <RoundedBox args={[armW, armH, d]} radius={0.03} smoothness={4}
+      {/* ─── 3 back cushions on main (cushion-look, matching segments) ─── */}
+      {[0, 1, 2].map(i => (
+        <RoundedBox key={`bc${i}`}
+          args={[segW, bCushH, bCushT]} radius={0.04} smoothness={4}
+          position={[cRX + armW + segW / 2 + i * (segW + g), platH + bCushH / 2, bz + backT + bCushT / 2]}
+          castShadow>
+          <meshPhysicalMaterial {...fabricMat(lighten(color, 10), sel)} />
+        </RoundedBox>
+      ))}
+
+      {/* ─── Ottomane inner backrest frame (at X = cRX, along full depth) ─── */}
+      <RoundedBox args={[backT, backH, d]} radius={0.025} smoothness={4}
+        position={[cRX - backT / 2, legH + seatH + backH / 2, 0]} castShadow receiveShadow>
+        <meshPhysicalMaterial {...fabricMat(darken(color, 10), sel)} />
+      </RoundedBox>
+
+      {/* ─── Ottomane back cushions (2 along full depth) ─── */}
+      {[0, 1].map(j => (
+        <RoundedBox key={`oc${j}`}
+          args={[bCushT, bCushH, ottCushD]} radius={0.04} smoothness={4}
+          position={[cRX - backT - bCushT / 2, platH + bCushH / 2, bz + ottCushD / 2 + j * (ottCushD + g)]}
+          castShadow>
+          <meshPhysicalMaterial {...fabricMat(lighten(color, 10), sel)} />
+        </RoundedBox>
+      ))}
+
+      {/* ─── Armrests ─── */}
+      {/* Left arm: outer left edge of ottomane, full depth */}
+      <RoundedBox args={[armW, armH, d]} radius={0.025} smoothness={4}
         position={[lx + armW / 2, armH / 2, 0]} castShadow receiveShadow>
-        <meshPhysicalMaterial {...fabricMat(darken(color, 14), sel)} />
+        <meshPhysicalMaterial {...fabricMat(darken(color, 12), sel)} />
       </RoundedBox>
-
-      {/* ── Right arm: main section depth only ── */}
-      <RoundedBox args={[armW, armH, mainD]} radius={0.03} smoothness={4}
+      {/* Right arm: outer right edge of main section, main depth only */}
+      <RoundedBox args={[armW, armH, mainD]} radius={0.025} smoothness={4}
         position={[rx - armW / 2, armH / 2, bz + mainD / 2]} castShadow receiveShadow>
-        <meshPhysicalMaterial {...fabricMat(darken(color, 14), sel)} />
-      </RoundedBox>
-
-      {/* ── Rear arm: across full width ── */}
-      <RoundedBox args={[w, armH, armW]} radius={0.03} smoothness={4}
-        position={[0, armH / 2, bz + armW / 2]} castShadow receiveShadow>
-        <meshPhysicalMaterial {...fabricMat(darken(color, 14), sel)} />
+        <meshPhysicalMaterial {...fabricMat(darken(color, 12), sel)} />
       </RoundedBox>
     </group>
   );
